@@ -24,6 +24,7 @@ if __name__ == '__main__':
         if sys.argv[1] == 'stop': pcm.server.stop()
         elif sys.argv[1] == 'start': subprocess.Popen([sys.argv[0],'listen'], shell=False)
         elif sys.argv[1] == 'listen': pcm.server.start()
+        elif sys.argv[1] == 'status': pcm.server.status()
 
     except (IndexError, FileNotFoundError) as e: print(str(e), file=sys.stderr)
     except NameError: pass

@@ -33,6 +33,10 @@ def str2bool(v, true=("yes", "true", "1")):
     """Convert "true" string to a boolean."""
     return v.lower() in true
 
+def process_request(request):
+    
+    return request
+
 class PCM:
     """PCM"""
     default_cfgname = './pcm.cfg'
@@ -71,6 +75,5 @@ class PCM:
         except Exception as e:
             self.logger.log(' *** Configuration error! − '+str(e)+' ***')
             return False
-
 
 
