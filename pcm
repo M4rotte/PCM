@@ -10,6 +10,7 @@ try:
     from signal import signal, SIGTERM, SIGINT, SIGCHLD
     import subprocess
     import PCM
+    import Server
 
 except ImportError as e:
 
@@ -20,11 +21,15 @@ except ImportError as e:
 if __name__ == '__main__':
 
     pcm = PCM.PCM('./pcm.cfg', sys.argv)
-    try:
-        if sys.argv[1] == 'stop': pcm.server.stop()
-        elif sys.argv[1] == 'start': subprocess.Popen([sys.argv[0],'listen'], shell=False)
-        elif sys.argv[1] == 'listen': pcm.server.start()
-        elif sys.argv[1] == 'status': pcm.server.status()
+    server = Server.Server(pcm.configuration, pcm.logger)
 
-    except (IndexError, FileNotFoundError) as e: print(str(e), file=sys.stderr)
-    except NameError: pass
+    try:
+        if sys.argv[1] == 'stop' and server.status(): server.stop()
+        elif sys.argv[1] == 'start':
+            subprocess.Popen([sys.argv[0],'listen'], shell=False)
+        elif sys.argv[1] == 'listen':
+            server.start()
+        elif sys.argv[1] == 'status': server.status()
+
+    except (IndexError, FileNotFoundError, NameError) as e: print(str(e), file=sys.stderr)
+

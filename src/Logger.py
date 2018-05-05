@@ -16,13 +16,11 @@ class Logger:
 
     def log(self, message, level = 0, f = None):
         """Write a message to the logger’s output if its criticity is over the chosen level."""
-
         prefix = ''
         if self.log_time: prefix = strftime("%Y-%m-%d %H:%M:%S")+' ['+str(level)+'] '+'  '
         if level >= self.level:
             if f: print(prefix+str(message), file=f)
             else: print(prefix+str(message), file=self.logfile)
-
         self.flush()
 
     def setLogfile(self, filename):

@@ -34,7 +34,7 @@ def str2bool(v, true=("yes", "true", "1")):
     return v.lower() in true
 
 def process_request(request):
-    
+
     return request
 
 class PCM:
@@ -55,7 +55,7 @@ class PCM:
         self.logger.setLogfile('&2')
         self.Configure()
         self.cmdline = Cmdline.Cmdline(args)
-        self.server = Server.Server(self.configuration, self.logger)
+
 
     def Configure(self):
         
@@ -75,5 +75,4 @@ class PCM:
         except Exception as e:
             self.logger.log(' *** Configuration error! − '+str(e)+' ***')
             return False
-
 

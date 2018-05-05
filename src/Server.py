@@ -21,6 +21,8 @@ class Server:
 
     def start(self):
 
+        if self.status(): return False
+
         try:
             self.loop = asyncio.get_event_loop()
             self.coro = asyncio.start_server(self.handle_request, '127.0.0.1', 1331, loop=self.loop)
@@ -28,6 +30,7 @@ class Server:
             self.logger.log('Serving on {}'.format(self.server.sockets[0].getsockname()),0)
             with open(self.pidfile,'w') as f: f.write(str(getpid()))
             signal(SIGUSR1, self.close_server)
+            print('PCM server is listening on {}. PID={}'.format(self.server.sockets[0].getsockname(),getpid()), file=sys.stderr)
             self.loop.run_forever()
         except OSError as err:
             print(str(err), file=sys.stderr)
@@ -43,16 +46,18 @@ class Server:
     def status(self):
         try:
             with open(self.pidfile,'r') as f: pid = int(f.readline())
-            print('PID:'+str(pid))
-            kill(pid,0)
-            print('PCM is running. PID='+str(pid), file=sys.stderr)
+            print('PCM is running. PID={}'.format(str(pid)), file=sys.stderr)
+            
             return True
-        except (AttributeError,OSError,FileNotFoundError) as err:
-            if err.errno == errno.EPERM:
-                print('PCM is running but access is denied. PID='+str(pid), file=sys.stderr)
-                return True
-            else:
-                print(str(err), file=sys.stderr)
+        except (AttributeError,OSError) as err:
+            try:
+                if err.errno == errno.EPERM:
+                    print('PCM is running but access is denied. PID='+str(pid), file=sys.stderr)
+                    return False
+                else: print(str(err), file=sys.stderr)
+                return False
+            except NameError as ne:
+                print('No PID file found. '+str(err), file=sys.stderr)
                 return False
         
     def close_server(self, signum, frame):
