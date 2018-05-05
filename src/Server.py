@@ -17,7 +17,7 @@ class Server:
     
         print(configuration)
         print(logger)
-        self.pidfile = './pcm.pid'
+        self.pidfile = configuration['server_pid_file']
         self.logger = logger
 
     def start(self):
@@ -41,18 +41,18 @@ class Server:
             with open(self.pidfile,'r') as f: pid = int(f.readline())
             kill(pid,SIGUSR1)
             unlink(self.pidfile)
-            print('PCM stopped.', file=sys.stderr)
+            print('PCM Server is stopped.', file=sys.stderr)
         except AttributeError: pass
  
     def status(self):
         try:
             with open(self.pidfile,'r') as f: pid = int(f.readline())
-            print('PCM is running. PID={}'.format(str(pid)), file=sys.stderr)
+            print('PCM Server is running. PID={}'.format(str(pid)), file=sys.stderr)
             return True
         except (AttributeError,OSError) as err:
             try:
                 if err.errno == errno.EPERM:
-                    print('PCM is running but access is denied. PID='+str(pid), file=sys.stderr)
+                    print('PCM Server is running but access is denied. PID='+str(pid), file=sys.stderr)
                     return False
                 else: print(str(err), file=sys.stderr)
                 return False
@@ -61,7 +61,7 @@ class Server:
                 return False
         
     def close_server(self, signum, frame):
-        self.logger.log('PID '+str(getpid())+' received signal '+str(signum)+' ('+str(frame)+')', 0)
+        self.logger.log('PCM Server PID='+str(getpid())+' received signal '+str(signum)+' ('+str(frame)+'). Stopping…', 0)
         self.server.close()
         self.loop.run_until_complete(server.wait_closed())
         self.loop.close()
@@ -77,7 +77,7 @@ class Server:
         addr = writer.get_extra_info('peername')
         self.logger.log("Received %r from %r" % (message, addr),0)
         response = self.process_request(message)
-        self.logger.log("Send: %r" % response, 0)
+        self.logger.log("Send: %r to %r" % (response, addr), 0)
         writer.write(data)
         yield from writer.drain()
         writer.close()

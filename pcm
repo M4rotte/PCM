@@ -10,7 +10,7 @@ try:
     from signal import signal, SIGTERM, SIGINT, SIGCHLD
     import subprocess
     import PCM
-    import Server
+    import Server, Watcher
 
 except ImportError as e:
 
@@ -22,18 +22,23 @@ if __name__ == '__main__':
 
     pcm = PCM.PCM('./pcm.cfg', sys.argv)
     server = Server.Server(pcm.configuration, pcm.logger)
+    
 
     try:
         if sys.argv[1] == 'stop':
             server.stop()
             pcm.stopEngine()
+            pcm.stopWatcher()
         elif sys.argv[1] == 'start':
+            subprocess.Popen([sys.argv[0],'watcher'], shell=False)
             subprocess.Popen([sys.argv[0],'listen'], shell=False)
-            print('one')
             subprocess.Popen([sys.argv[0],'engine'], shell=False)
         elif sys.argv[1] == 'listen': server.start()
         elif sys.argv[1] == 'engine': pcm.startEngine()
+        elif sys.argv[1] == 'watcher':
+            pcm.startWatcher()
         elif sys.argv[1] == 'status':
+            pcm.watcherStatus()
             server.status()
             pcm.engineStatus()
 
