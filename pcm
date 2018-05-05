@@ -24,12 +24,19 @@ if __name__ == '__main__':
     server = Server.Server(pcm.configuration, pcm.logger)
 
     try:
-        if sys.argv[1] == 'stop' and server.status(): server.stop()
+        if sys.argv[1] == 'stop':
+            server.stop()
+            pcm.stopEngine()
         elif sys.argv[1] == 'start':
             subprocess.Popen([sys.argv[0],'listen'], shell=False)
-        elif sys.argv[1] == 'listen':
-            server.start()
-        elif sys.argv[1] == 'status': server.status()
+            print('one')
+            subprocess.Popen([sys.argv[0],'engine'], shell=False)
+        elif sys.argv[1] == 'listen': server.start()
+        elif sys.argv[1] == 'engine': pcm.startEngine()
+        elif sys.argv[1] == 'status':
+            server.status()
+            pcm.engineStatus()
+
 
     except (IndexError, FileNotFoundError, NameError) as e: print(str(e), file=sys.stderr)
 

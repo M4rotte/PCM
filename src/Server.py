@@ -7,6 +7,7 @@ import sys
 import asyncio
 from os import getpid, kill, unlink, _exit
 from signal import signal, SIGTERM, SIGUSR1
+from time import sleep
 
 import PCM
 
@@ -47,7 +48,6 @@ class Server:
         try:
             with open(self.pidfile,'r') as f: pid = int(f.readline())
             print('PCM is running. PID={}'.format(str(pid)), file=sys.stderr)
-            
             return True
         except (AttributeError,OSError) as err:
             try:
@@ -65,14 +65,18 @@ class Server:
         self.server.close()
         self.loop.run_until_complete(server.wait_closed())
         self.loop.close()
-                
+
+    def process_request(self,request):
+
+        return request
+
     @asyncio.coroutine
     def handle_request(self, reader, writer):
         data = yield from reader.read(1024)
         message = data.decode()
         addr = writer.get_extra_info('peername')
         self.logger.log("Received %r from %r" % (message, addr),0)
-        response = PCM.process_request(message)
+        response = self.process_request(message)
         self.logger.log("Send: %r" % response, 0)
         writer.write(data)
         yield from writer.drain()

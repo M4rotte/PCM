@@ -9,7 +9,7 @@ try:
     from multiprocessing import Process, Queue
     from signal          import signal, SIGTERM, SIGHUP
     from re              import split as resplit 
-    from os              import _exit
+    from os              import _exit, getpid, kill, unlink
     import Logger, Cmdline, Server
 
 except ImportError as e:
@@ -33,9 +33,7 @@ def str2bool(v, true=("yes", "true", "1")):
     """Convert "true" string to a boolean."""
     return v.lower() in true
 
-def process_request(request):
 
-    return request
 
 class PCM:
     """PCM"""
@@ -55,7 +53,39 @@ class PCM:
         self.logger.setLogfile('&2')
         self.Configure()
         self.cmdline = Cmdline.Cmdline(args)
+        self.enginePIDfile = './pcme.pid'
 
+    def startEngine(self):
+        
+        with open(self.enginePIDfile,'w') as f: f.write(str(getpid()))
+        while True:
+            print('hey!')
+            sleep(5)
+
+    def stopEngine(self):
+        try:
+            with open(self.enginePIDfile,'r') as f: pid = int(f.readline())
+            kill(pid,SIGTERM)
+            unlink(self.enginePIDfile)
+            self.logger.log('PID '+str(pid)+' stopped.')
+            print('PCM Engine stopped.', file=sys.stderr)
+        except AttributeError as err: print(str(err))
+
+    def engineStatus(self):
+        try:
+            with open(self.enginePIDfile,'r') as f: pid = int(f.readline())
+            print('PCM Engine is running. PID={}'.format(str(pid)), file=sys.stderr)
+            return True
+        except (AttributeError,OSError) as err:
+            try:
+                if err.errno == errno.EPERM:
+                    print('PCM Engine is running but access is denied. PID='+str(pid), file=sys.stderr)
+                    return False
+                else: print(str(err), file=sys.stderr)
+                return False
+            except NameError as ne:
+                print('No PID file found. '+str(err), file=sys.stderr)
+                return False
 
     def Configure(self):
         
