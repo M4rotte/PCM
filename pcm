@@ -22,7 +22,6 @@ if __name__ == '__main__':
 
     pcm = PCM.PCM('./pcm.cfg', sys.argv)
     server = Server.Server(pcm.configuration, pcm.logger)
-    
 
     try:
         if sys.argv[1] == 'stop':
@@ -30,9 +29,9 @@ if __name__ == '__main__':
             pcm.stopEngine()
             pcm.stopWatcher()
         elif sys.argv[1] == 'start':
-            subprocess.Popen([sys.argv[0],'watcher'], shell=False)
-            subprocess.Popen([sys.argv[0],'listen'], shell=False)
-            subprocess.Popen([sys.argv[0],'engine'], shell=False)
+            p1 = subprocess.Popen([sys.argv[0],'listen'], shell=False)
+            p2 = subprocess.Popen([sys.argv[0],'engine'], shell=False)
+            p3 = subprocess.Popen([sys.argv[0],'watcher'], shell=False)
         elif sys.argv[1] == 'listen': server.start()
         elif sys.argv[1] == 'engine': pcm.startEngine()
         elif sys.argv[1] == 'watcher':

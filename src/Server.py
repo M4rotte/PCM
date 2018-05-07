@@ -15,8 +15,6 @@ class Server:
 
     def __init__(self, configuration, logger):
     
-        print(configuration)
-        print(logger)
         self.pidfile = configuration['server_pid_file']
         self.logger = logger
 

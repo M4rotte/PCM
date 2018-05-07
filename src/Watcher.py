@@ -1,17 +1,36 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-from time import time, sleep
+import sys
+
+try:
+    from time import time, sleep
+    from pickle import dumps, loads
+
+except ImportError as e:
+
+    print(str(e), file=sys.stderr)
+    print('Cannot find the module(s) listed above. Exiting.', file=sys.stderr)
+    sys.exit(1)
 
 class Watcher:
 
-    def __init__(self):
+    def __init__(self, configuration):
     
-        self.start_time = int(time())
-        self.uptime = 0
+        self.status = {}
+        self.status['watcherStartTime'] = None
+        self.status['watcherUptime'] = 0
+        self.status['filename'] = configuration['watcher_status_file']
 
     def run(self):
+        
+        self.status['watcherStartTime'] = int(time())
         while True:
-            self.uptime = int(time()) - self.start_time
-            print('watching since: '+str(self.uptime))
-            sleep(3)
+            try:
+                with open(self.status['filename'], 'rb') as f:
+                    self.status = loads(f.read())
+                    self.status['watcherUptime'] = int(time()) - self.status['watcherStartTime']
+            except (FileNotFoundError, EOFError): pass
+            with open(self.status['filename'], 'wb') as f:
+                f.write(dumps(self.status))
+            sleep(1)

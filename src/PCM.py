@@ -10,6 +10,7 @@ try:
     from signal          import signal, SIGTERM, SIGHUP
     from re              import split as resplit 
     from os              import _exit, getpid, kill, unlink
+    from pickle          import dumps, loads
     import Logger, Cmdline, Server, Watcher
 
 except ImportError as e:
@@ -33,8 +34,6 @@ def str2bool(v, true=("yes", "true", "1")):
     """Convert "true" string to a boolean."""
     return v.lower() in true
 
-
-
 class PCM:
     """PCM"""
     default_cfgname = './pcm.cfg'
@@ -46,6 +45,7 @@ class PCM:
     def __init__(self, cfgname = default_cfgname, args = sys.argv):
 
         self.configuration = {}
+        self.status = {}
         self.cfgname = cfgname
         signal(SIGHUP, self.handle_sighup)
         self.logger = Logger.Logger()
@@ -56,13 +56,24 @@ class PCM:
         self.cmdline = Cmdline.Cmdline(args)
         self.enginePIDfile = self.configuration['engine_pid_file']
         self.watcherPIDfile = self.configuration['watcher_pid_file']
+        self.engineStatusFile = self.configuration['engine_status_file']
+        self.status['engineStartTime'] = None
+        self.status['engineUptime'] = 0
 
     def startEngine(self):
         
         with open(self.enginePIDfile,'w') as f: f.write(str(getpid()))
+        self.status['filename'] = self.configuration['engine_status_file']
+        self.status['engineStartTime'] = int(time())
         while True:
-            print('hey!')
-            sleep(5)
+            try:
+                with open(self.engineStatusFile, 'rb') as f:
+                    self.status = loads(f.read())
+                    self.status['engineUptime'] = int(time()) - self.status['engineStartTime']
+            except (FileNotFoundError, EOFError): pass
+            with open(self.engineStatusFile, 'wb') as f:
+                f.write(dumps(self.status))
+            sleep(1)
 
     def stopEngine(self):
         try:
@@ -76,7 +87,9 @@ class PCM:
     def engineStatus(self):
         try:
             with open(self.enginePIDfile,'r') as f: pid = int(f.readline())
+            with open(self.engineStatusFile,'rb') as f: self.status = loads(f.read())   
             print('PCM Engine is running. PID={}'.format(str(pid)), file=sys.stderr)
+            print(self.status, file=sys.stderr)
             return True
         except (AttributeError,OSError) as err:
             try:
@@ -92,7 +105,7 @@ class PCM:
     def startWatcher(self):
         
         with open(self.watcherPIDfile,'w') as f: f.write(str(getpid()))
-        self.watcher = Watcher.Watcher()
+        self.watcher = Watcher.Watcher(self.configuration)
         self.watcher.run()
 
     def stopWatcher(self):
@@ -107,7 +120,9 @@ class PCM:
     def watcherStatus(self):
         try:
             with open(self.watcherPIDfile,'r') as f: pid = int(f.readline())
+            with open(self.configuration['watcher_status_file'],'rb') as f: self.status = loads(f.read())
             print('PCM Watcher is running. PID={}'.format(str(pid)), file=sys.stderr)
+            print(self.status, file=sys.stderr)
             return True
         except (AttributeError,OSError) as err:
             try:
