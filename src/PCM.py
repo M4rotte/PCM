@@ -40,7 +40,7 @@ class PCM:
 
     def handle_sighup(self, signum, frame):
         
-        self.Configure(self.cfgfile)
+        self.Configure()
 
     def __init__(self, cfgname = default_cfgname, args = sys.argv):
 
