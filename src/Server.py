@@ -55,7 +55,7 @@ class Server:
                 else: print(str(err), file=sys.stderr)
                 return False
             except NameError as ne:
-                print('No PID file found. '+str(err), file=sys.stderr)
+                print('No PID file found for PCM Server. '+str(err), file=sys.stderr)
                 return False
         
     def close_server(self, signum, frame):

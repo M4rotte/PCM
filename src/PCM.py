@@ -57,6 +57,7 @@ class PCM:
         self.enginePIDfile = self.configuration['engine_pid_file']
         self.watcherPIDfile = self.configuration['watcher_pid_file']
         self.engineStatusFile = self.configuration['engine_status_file']
+        self.watcherStatusFile = self.configuration['watcher_status_file']
         self.status['engineStartTime'] = None
         self.status['engineUptime'] = 0
 
@@ -80,6 +81,7 @@ class PCM:
             with open(self.enginePIDfile,'r') as f: pid = int(f.readline())
             kill(pid,SIGTERM)
             unlink(self.enginePIDfile)
+            unlink(self.engineStatusFile)
             self.logger.log('PCM Engine PID='+str(pid)+' is stopped.')
             print('PCM Engine is stopped.', file=sys.stderr)
         except AttributeError as err: print(str(err))
@@ -88,8 +90,8 @@ class PCM:
         try:
             with open(self.enginePIDfile,'r') as f: pid = int(f.readline())
             with open(self.engineStatusFile,'rb') as f: self.status = loads(f.read())   
-            print('PCM Engine is running. PID={}'.format(str(pid)), file=sys.stderr)
-            print(self.status, file=sys.stderr)
+            print('PCM Engine is running. PID={} Uptime={}'.format(str(pid),str(self.status['engineUptime'])), file=sys.stderr)
+            # ~ print(self.status, file=sys.stderr)
             return True
         except (AttributeError,OSError) as err:
             try:
@@ -113,6 +115,7 @@ class PCM:
             with open(self.watcherPIDfile,'r') as f: pid = int(f.readline())
             kill(pid,SIGTERM)
             unlink(self.watcherPIDfile)
+            unlink(self.watcherStatusFile)
             self.logger.log('PCM Watcher PID='+str(pid)+' is stopped.')
             print('PCM Watcher is stopped.', file=sys.stderr)
         except AttributeError as err: print(str(err))
@@ -121,8 +124,8 @@ class PCM:
         try:
             with open(self.watcherPIDfile,'r') as f: pid = int(f.readline())
             with open(self.configuration['watcher_status_file'],'rb') as f: self.status = loads(f.read())
-            print('PCM Watcher is running. PID={}'.format(str(pid)), file=sys.stderr)
-            print(self.status, file=sys.stderr)
+            print('PCM Watcher is running. PID={} Uptime={}'.format(str(pid), str(self.status['watcherUptime'])), file=sys.stderr)
+            # ~ print(self.status, file=sys.stderr)
             return True
         except (AttributeError,OSError) as err:
             try:
