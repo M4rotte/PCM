@@ -9,9 +9,10 @@ try:
     from multiprocessing import Process, Queue
     from signal          import signal, SIGTERM, SIGHUP
     from re              import split as resplit 
-    from os              import _exit, getpid, kill, unlink
+    from os              import _exit, getpid, kill, unlink, mkdir
+    from os.path         import isfile, isdir
     from pickle          import dumps, loads
-    import Logger, Cmdline, Server, Watcher
+    import Logger, Cmdline, Server, Watcher, Engine
 
 except ImportError as e:
 
@@ -60,6 +61,14 @@ class PCM:
         self.watcherStatusFile = self.configuration['watcher_status_file']
         self.status['engineStartTime'] = None
         self.status['engineUptime'] = 0
+        self.setInitialFiles()
+
+    def setInitialFiles(self):
+        
+        if not isdir(self.configuration['host_dir']): mkdir(self.configuration['host_dir'])
+        if not isfile(self.configuration['host_dir']+'/localhost.in'):
+            with open(self.configuration['host_dir']+'/localhost.in', 'w') as f:
+                f.write("IP_ADDRESS = '127.0.0.1'\n")
 
     def startEngine(self):
         
@@ -68,6 +77,7 @@ class PCM:
         with open(self.enginePIDfile,'w') as f: f.write(str(getpid()))
         self.status['filename'] = self.configuration['engine_status_file']
         self.status['engineStartTime'] = int(time())
+        self.engine = Engine.Engine(self.configuration)
         while True:
             try:
                 with open(self.engineStatusFile, 'rb') as f:
@@ -75,6 +85,7 @@ class PCM:
                     self.status['engineUptime'] = int(time()) - self.status['engineStartTime']
             except (FileNotFoundError, EOFError): pass
             with open(self.engineStatusFile, 'wb') as f:
+                self.engine.run()
                 f.write(dumps(self.status))
             sleep(1)
 
@@ -86,7 +97,7 @@ class PCM:
             unlink(self.engineStatusFile)
             self.logger.log('PCM Engine PID='+str(pid)+' is stopped.')
             print('PCM Engine is stopped.', file=sys.stderr)
-        except AttributeError as err: print(str(err))
+        except (AttributeError, ProcessLookupError) as err: print(str(err))
 
     def engineStatus(self):
         try:
