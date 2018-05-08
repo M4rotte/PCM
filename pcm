@@ -38,7 +38,7 @@ if __name__ == '__main__':
             pcm.startWatcher()
         elif sys.argv[1] == 'status':
             pcm.watcherStatus()
-            server.status()
+            server.serverStatus()
             pcm.engineStatus()
 
 

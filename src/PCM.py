@@ -63,6 +63,8 @@ class PCM:
 
     def startEngine(self):
         
+        if self.engineStatus(): return False
+        
         with open(self.enginePIDfile,'w') as f: f.write(str(getpid()))
         self.status['filename'] = self.configuration['engine_status_file']
         self.status['engineStartTime'] = int(time())
@@ -106,6 +108,7 @@ class PCM:
 
     def startWatcher(self):
         
+        if self.watcherStatus(): return False
         with open(self.watcherPIDfile,'w') as f: f.write(str(getpid()))
         self.watcher = Watcher.Watcher(self.configuration)
         self.watcher.run()

@@ -7,7 +7,8 @@ import sys
 import asyncio
 from os import getpid, kill, unlink, _exit
 from signal import signal, SIGTERM, SIGUSR1
-from time import sleep
+from time import sleep, time
+from pickle import dumps,loads
 
 import PCM
 
@@ -17,17 +18,24 @@ class Server:
     
         self.pidfile = configuration['server_pid_file']
         self.logger = logger
+        self.status = {}
+        self.status['serverStartTime'] = None
+        self.status['serverUptime'] = 0
+        self.status['filename'] = configuration['server_status_file']
 
     def start(self):
 
-        if self.status(): return False
+        if self.serverStatus(): return False
 
         try:
             self.loop = asyncio.get_event_loop()
             self.coro = asyncio.start_server(self.handle_request, '127.0.0.1', 1331, loop=self.loop)
             self.server = self.loop.run_until_complete(self.coro)
             self.logger.log('Serving on {}'.format(self.server.sockets[0].getsockname()),0)
+            self.status['serverStartTime'] = int(time())
             with open(self.pidfile,'w') as f: f.write(str(getpid()))
+            with open(self.status['filename'] , 'wb') as f:
+                f.write(dumps(self.status))
             signal(SIGUSR1, self.close_server)
             print('PCM server is listening on {}. PID={}'.format(self.server.sockets[0].getsockname(),getpid()), file=sys.stderr)
             self.loop.run_forever()
@@ -39,13 +47,21 @@ class Server:
             with open(self.pidfile,'r') as f: pid = int(f.readline())
             kill(pid,SIGUSR1)
             unlink(self.pidfile)
+            unlink(self.status['filename'])
             print('PCM Server is stopped.', file=sys.stderr)
         except AttributeError: pass
  
-    def status(self):
+    def serverStatus(self):
         try:
             with open(self.pidfile,'r') as f: pid = int(f.readline())
-            print('PCM Server is running. PID={}'.format(str(pid)), file=sys.stderr)
+            try:
+                with open(self.status['filename'], 'rb') as f:
+                    self.status = loads(f.read())
+                    self.status['serverUptime'] = int(time()) - self.status['serverStartTime']
+            except (FileNotFoundError, EOFError): pass
+            with open(self.status['filename'], 'wb') as f:
+                f.write(dumps(self.status))
+            print('PCM Server is running. PID={} Uptime={}'.format(str(pid), str(self.status['serverUptime'])), file=sys.stderr)
             return True
         except (AttributeError,OSError) as err:
             try:
