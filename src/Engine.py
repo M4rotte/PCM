@@ -19,7 +19,7 @@ class Engine:
 
     def __init__(self, configuration):
     
-       print('Creating engine using {} as key file.'.format(configuration['rsa_key']))
+       print('\nCreating engine using {} as key file.'.format(configuration['rsa_key']))
        self.SSHClient = SSHClient.SSHClient(self.readKeyFile(configuration['rsa_key']))
        self.SSHClient.saveKey(configuration['rsa_key'])
     

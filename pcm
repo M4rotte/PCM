@@ -22,7 +22,6 @@ if __name__ == '__main__':
 
     pcm = PCM.PCM('./pcm.cfg', sys.argv)
     server = Server.Server(pcm.configuration, pcm.logger)
-
     try:
         if sys.argv[1] == 'stop':
             server.stop()
@@ -37,6 +36,7 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'watcher':
             pcm.startWatcher()
         elif sys.argv[1] == 'status':
+            
             pcm.watcherStatus()
             server.serverStatus()
             pcm.engineStatus()

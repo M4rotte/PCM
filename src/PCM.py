@@ -89,6 +89,7 @@ class PCM:
                 f.write(dumps(self.status))
             sleep(1)
 
+
     def stopEngine(self):
         try:
             with open(self.enginePIDfile,'r') as f: pid = int(f.readline())
@@ -104,7 +105,7 @@ class PCM:
         try:
             with open(self.enginePIDfile,'r') as f: pid = int(f.readline())
             with open(self.engineStatusFile,'rb') as f: self.status = loads(f.read())   
-            print('PCM Engine is running. PID={} Uptime={}'.format(str(pid),str(self.status['engineUptime'])), file=sys.stderr)
+            print('\nPCM Engine is running. PID={} Uptime={}'.format(str(pid),str(self.status['engineUptime'])), file=sys.stderr)
             # ~ print(self.status, file=sys.stderr)
             return True
         except (AttributeError,OSError) as err:
@@ -115,7 +116,7 @@ class PCM:
                 else: print(str(err), file=sys.stderr)
                 return False
             except NameError as ne:
-                print('No PID file found for PCM Engine. '+str(err), file=sys.stderr)
+                # ~ print('No PID file found for PCM Engine. '+str(err), file=sys.stderr)
                 return False
 
         except EOFError:
@@ -155,7 +156,7 @@ class PCM:
                 else: print(str(err), file=sys.stderr)
                 return False
             except NameError as ne:
-                print('No PID file found for PCM Watcher. '+str(err), file=sys.stderr)
+                # ~ print('No PID file found for PCM Watcher. '+str(err), file=sys.stderr)
                 return False
 
     def Configure(self):
