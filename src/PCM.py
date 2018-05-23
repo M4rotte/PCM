@@ -96,8 +96,9 @@ class PCM:
             unlink(self.enginePIDfile)
             unlink(self.engineStatusFile)
             self.logger.log('PCM Engine PID='+str(pid)+' is stopped.')
-            print('PCM Engine is stopped.', file=sys.stderr)
-        except (AttributeError, ProcessLookupError) as err: print(str(err))
+            print('PCM Engine  stopped.', file=sys.stderr)
+        except (AttributeError, ProcessLookupError, FileNotFoundError):
+            print('PCM Engine  not running.', file=sys.stderr)
 
     def engineStatus(self):
         try:
@@ -117,6 +118,10 @@ class PCM:
                 print('No PID file found for PCM Engine. '+str(err), file=sys.stderr)
                 return False
 
+        except EOFError:
+            
+            print('PCM Engine is running. PID={}'.format(str(pid)), file=sys.stderr)
+
     def startWatcher(self):
         
         if self.watcherStatus(): return False
@@ -131,8 +136,9 @@ class PCM:
             unlink(self.watcherPIDfile)
             unlink(self.watcherStatusFile)
             self.logger.log('PCM Watcher PID='+str(pid)+' is stopped.')
-            print('PCM Watcher is stopped.', file=sys.stderr)
-        except AttributeError as err: print(str(err))
+            print('PCM Watcher stopped.', file=sys.stderr)
+        except (AttributeError, FileNotFoundError):
+            print('PCM Watcher not running.', file=sys.stderr)
 
     def watcherStatus(self):
         try:

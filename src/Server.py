@@ -48,8 +48,9 @@ class Server:
             kill(pid,SIGUSR1)
             unlink(self.pidfile)
             unlink(self.status['filename'])
-            print('PCM Server is stopped.', file=sys.stderr)
-        except AttributeError: pass
+            print('PCM Server  stopped.', file=sys.stderr)
+        except (AttributeError,FileNotFoundError): 
+            print('PCM Server  not running.', file=sys.stderr)
  
     def serverStatus(self):
         try:

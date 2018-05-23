@@ -19,6 +19,7 @@ class Engine:
 
     def __init__(self, configuration):
     
+       print('Creating engine using {} as key file.'.format(configuration['rsa_key']))
        self.SSHClient = SSHClient.SSHClient(self.readKeyFile(configuration['rsa_key']))
        self.SSHClient.saveKey(configuration['rsa_key'])
     
@@ -28,7 +29,7 @@ class Engine:
             with open(filename, 'rb') as f:
                 data = f.read()
                 return load_pem_private_key(data,backend=crypto_default_backend(),password=None)
-        except (ValueError,FileNotFoundError, EOFError): return None
+        except (ValueError,FileNotFoundError,EOFError): return None
         
     def run(self):
     

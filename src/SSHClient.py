@@ -21,6 +21,7 @@ class SSHClient:
 
         if not private_key: self.newkey()
         else: self.private_key = private_key
+        print('Creating SSHClient with private key "{}"'.format(str(self.private_key)))
 
     def newkey(self):
 
