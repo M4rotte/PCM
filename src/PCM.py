@@ -76,7 +76,7 @@ class PCM:
         with open(self.enginePIDfile,'w') as f: f.write(str(getpid()))
         self.status['filename'] = self.configuration['engine_status_file']
         self.status['engineStartTime'] = int(time())
-        self.engine = Engine.Engine(self.configuration)
+        self.engine = Engine.Engine(self.configuration, self.logger)
         while True:
             try:
                 with open(self.engineStatusFile, 'rb') as f:
@@ -86,6 +86,7 @@ class PCM:
             with open(self.engineStatusFile, 'wb') as f:
                 self.engine.run()
                 f.write(dumps(self.status))
+                if self.engine.lucky(20): self.logger.log('Engine OK, uptime is {}.'.format(self.status['engineUptime']))
             sleep(1)
 
     def stopEngine(self):
@@ -124,7 +125,7 @@ class PCM:
         
         if self.watcherStatus(): return False
         with open(self.watcherPIDfile,'w') as f: f.write(str(getpid()))
-        self.watcher = Watcher.Watcher(self.configuration)
+        self.watcher = Watcher.Watcher(self.configuration, self.logger)
         self.watcher.run()
 
     def stopWatcher(self):

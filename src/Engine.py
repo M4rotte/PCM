@@ -6,6 +6,7 @@ import sys
 try:
 
     import SSHClient
+    import Daemon
     from os import getpid
     from cryptography.hazmat.primitives.serialization import load_pem_private_key
     from cryptography.hazmat.backends import default_backend as crypto_default_backend
@@ -16,13 +17,14 @@ except ImportError as e:
     print('Cannot find the module(s) listed above. Exiting.', file=sys.stderr)
     sys.exit(1)
 
-class Engine:
+class Engine(Daemon.Daemon):
 
-    def __init__(self, configuration):
+    def __init__(self, configuration, logger = None):
     
-       print('PCM Engine starts. PID={}'.format(str(getpid())), file=sys.stderr)
-       self.SSHClient = SSHClient.SSHClient(self.readKeyFile(configuration['rsa_key']))
-       self.SSHClient.saveKey(configuration['rsa_key'], configuration['rsa_key_pub'])
+        super().__init__(configuration, logger)
+        print('PCM Engine starts. PID={}'.format(str(getpid())), file=sys.stderr)
+        self.SSHClient = SSHClient.SSHClient(self.readKeyFile(configuration['rsa_key']))
+        self.SSHClient.saveKey(configuration['rsa_key'], configuration['rsa_key_pub'])
     
     def readKeyFile(self, filename):
         
