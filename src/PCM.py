@@ -88,7 +88,6 @@ class PCM:
                 f.write(dumps(self.status))
             sleep(1)
 
-
     def stopEngine(self):
         try:
             with open(self.enginePIDfile,'r') as f: pid = int(f.readline())
@@ -175,3 +174,4 @@ class PCM:
             self.logger.log(' *** Configuration error! − '+str(e)+' ***')
             return False
 
+    

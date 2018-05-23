@@ -4,10 +4,12 @@
 import sys
 
 try:
-
+    
+    from os import chmod
     from cryptography.hazmat.primitives import serialization as crypto_serialization
     from cryptography.hazmat.primitives.asymmetric import rsa
     from cryptography.hazmat.backends import default_backend as crypto_default_backend
+    from hashlib import blake2b
 
 except ImportError as e:
 
@@ -17,21 +19,39 @@ except ImportError as e:
     
 class SSHClient:
 
-    def __init__(self, private_key = None):
+    def __init__(self, key = None):
 
-        if not private_key: self.newkey()
-        else: self.private_key = private_key
-        print('Creating SSHClient with private key "{}"'.format(str(self.private_key)))
+        if not key: self.newkey()
+        else:
+            self.key = key
+        print('Using key "{}"'.format(self.keyhash()), file=sys.stderr)
 
     def newkey(self):
 
-        self.private_key = rsa.generate_private_key(backend=crypto_default_backend(),public_exponent=65537,key_size=2048)
+        print('Generating new key…', file=sys.stderr)
+        self.key = rsa.generate_private_key(backend=crypto_default_backend(),public_exponent=65537,key_size=2048)
 
-    def saveKey(self, filename):
+    def pubkey(self):
+        
+        return self.key.public_key().public_bytes(crypto_serialization.Encoding.OpenSSH,crypto_serialization.PublicFormat.OpenSSH)
+
+    def privkey(self):
+        
+        return self.key.private_bytes(crypto_serialization.Encoding.PEM,crypto_serialization.PrivateFormat.TraditionalOpenSSL,crypto_serialization.NoEncryption())
+
+    def saveKey(self, keyfile, pubkeyfile):
 
         try:
-            self.private_ssh_key = self.private_key.private_bytes(crypto_serialization.Encoding.PEM,crypto_serialization.PrivateFormat.PKCS8,crypto_serialization.NoEncryption())
-            with open(filename, 'wb') as f: f.write(self.private_ssh_key)
+            with open(keyfile, 'wb') as f: f.write(self.privkey())
+            chmod(keyfile,0o600)
         except AttributeError as e: print(str(e))
 
+        try:
+            with open(pubkeyfile, 'wb') as f: f.write(self.pubkey())
+        except AttributeError as e: print(str(e))
 
+    def keyhash(self):
+        
+        h = blake2b()
+        h.update(self.pubkey())
+        return h.hexdigest()

@@ -3,5 +3,6 @@ pcm.pid
 pcm.log
 *.status
 *.pid
-*.key
+pcm_key
+pcm_key.pub
 hosts/
