@@ -26,7 +26,7 @@ class Server:
     def start(self):
 
         if self.serverStatus(): return False
-
+        print('PCM Server starts. PID={}'.format(str(getpid())), file=sys.stderr)
         try:
             self.loop = asyncio.get_event_loop()
             self.coro = asyncio.start_server(self.handle_request, '127.0.0.1', 1331, loop=self.loop)
@@ -48,9 +48,9 @@ class Server:
             kill(pid,SIGUSR1)
             unlink(self.pidfile)
             unlink(self.status['filename'])
-            print('PCM Server  stopped.', file=sys.stderr)
+            print('PCM Server stopped.', file=sys.stderr)
         except (AttributeError,FileNotFoundError): 
-            print('PCM Server  not running.', file=sys.stderr)
+            print('PCM Server not running.', file=sys.stderr)
  
     def serverStatus(self):
         try:
@@ -72,7 +72,7 @@ class Server:
                 else: print(str(err), file=sys.stderr)
                 return False
             except NameError as ne:
-                # ~ print('No PID file found for PCM Server. '+str(err), file=sys.stderr)
+                print('PCM Server not running.', file=sys.stderr)
                 return False
         
     def close_server(self, signum, frame):

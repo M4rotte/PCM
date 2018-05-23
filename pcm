@@ -33,8 +33,7 @@ if __name__ == '__main__':
             p3 = subprocess.Popen([sys.argv[0],'watcher'], shell=False)
         elif sys.argv[1] == 'listen': server.start()
         elif sys.argv[1] == 'engine': pcm.startEngine()
-        elif sys.argv[1] == 'watcher':
-            pcm.startWatcher()
+        elif sys.argv[1] == 'watcher': pcm.startWatcher()
         elif sys.argv[1] == 'status':
             
             pcm.watcherStatus()

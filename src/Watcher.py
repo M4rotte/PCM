@@ -6,6 +6,7 @@ import sys
 try:
     from time import time, sleep
     from pickle import dumps, loads
+    from os import getpid
 
 except ImportError as e:
 
@@ -25,6 +26,7 @@ class Watcher:
     def run(self):
         
         self.status['watcherStartTime'] = int(time())
+        print('PCM Watcher starts. PID={}'.format(str(getpid())), file=sys.stderr)
         while True:
             try:
                 with open(self.status['filename'], 'rb') as f:
@@ -33,4 +35,5 @@ class Watcher:
             except (FileNotFoundError, EOFError): pass
             with open(self.status['filename'], 'wb') as f:
                 f.write(dumps(self.status))
+            
             sleep(1)

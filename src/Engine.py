@@ -6,6 +6,7 @@ import sys
 try:
 
     import SSHClient
+    from os import getpid
     from cryptography.hazmat.primitives.serialization import load_pem_private_key
     from cryptography.hazmat.backends import default_backend as crypto_default_backend
 
@@ -19,7 +20,7 @@ class Engine:
 
     def __init__(self, configuration):
     
-       print('\nCreating engine using {} as key file.'.format(configuration['rsa_key']))
+       print('PCM Engine starts. PID={}'.format(str(getpid())), file=sys.stderr)
        self.SSHClient = SSHClient.SSHClient(self.readKeyFile(configuration['rsa_key']))
        self.SSHClient.saveKey(configuration['rsa_key'])
     

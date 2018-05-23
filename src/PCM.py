@@ -73,7 +73,6 @@ class PCM:
     def startEngine(self):
         
         if self.engineStatus(): return False
-        
         with open(self.enginePIDfile,'w') as f: f.write(str(getpid()))
         self.status['filename'] = self.configuration['engine_status_file']
         self.status['engineStartTime'] = int(time())
@@ -98,15 +97,14 @@ class PCM:
             unlink(self.engineStatusFile)
             self.logger.log('PCM Engine PID='+str(pid)+' is stopped.')
             print('PCM Engine  stopped.', file=sys.stderr)
-        except (AttributeError, ProcessLookupError, FileNotFoundError):
-            print('PCM Engine  not running.', file=sys.stderr)
+        except (AttributeError, ProcessLookupError, FileNotFoundError): #TODO: Handle each exception individually
+            print('PCM Engine not running.', file=sys.stderr)
 
     def engineStatus(self):
         try:
             with open(self.enginePIDfile,'r') as f: pid = int(f.readline())
             with open(self.engineStatusFile,'rb') as f: self.status = loads(f.read())   
-            print('\nPCM Engine is running. PID={} Uptime={}'.format(str(pid),str(self.status['engineUptime'])), file=sys.stderr)
-            # ~ print(self.status, file=sys.stderr)
+            print('PCM Engine is running. PID={} Uptime={}'.format(str(pid),str(self.status['engineUptime'])), file=sys.stderr)
             return True
         except (AttributeError,OSError) as err:
             try:
@@ -116,7 +114,7 @@ class PCM:
                 else: print(str(err), file=sys.stderr)
                 return False
             except NameError as ne:
-                # ~ print('No PID file found for PCM Engine. '+str(err), file=sys.stderr)
+                print('PCM Engine not running.', file=sys.stderr)
                 return False
 
         except EOFError:
@@ -156,7 +154,7 @@ class PCM:
                 else: print(str(err), file=sys.stderr)
                 return False
             except NameError as ne:
-                # ~ print('No PID file found for PCM Watcher. '+str(err), file=sys.stderr)
+                print('PCM Watcher not running.', file=sys.stderr)
                 return False
 
     def Configure(self):
