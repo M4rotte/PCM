@@ -74,8 +74,6 @@ class PCM:
         
         if self.engineStatus(): return False
         with open(self.enginePIDfile,'w') as f: f.write(str(getpid()))
-        self.status['filename'] = self.configuration['engine_status_file']
-        self.status['startTime'] = int(time())
         self.engine = Engine.Engine(self.configuration, self.logger)
         self.engine.run()
 
@@ -126,7 +124,7 @@ class PCM:
             unlink(self.watcherStatusFile)
             self.logger.log('PCM Watcher PID='+str(pid)+' is stopped.')
             print('PCM Watcher stopped.', file=sys.stderr)
-        except (AttributeError, FileNotFoundError):
+        except (AttributeError, FileNotFoundError, ProcessLookupError): #TODO: Handle each exception individually
             print('PCM Watcher not running.', file=sys.stderr)
 
     def watcherStatus(self):
