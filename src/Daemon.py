@@ -27,7 +27,7 @@ class Daemon:
         self.state['startTime'] = None
         self.state['uptime'] = 0
         self.configuration = configuration
-        self.state['filename'] = self.configuration[name.lower()+'_status_file']
+        self.state['filename'] = self.configuration[name.lower()+'_state_file']
         self.state['PIDfile'] = self.configuration[name.lower()+'_pid_file']
 
     def lucky(self, possible):

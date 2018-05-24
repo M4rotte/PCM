@@ -5,7 +5,6 @@ import sys
 
 try:
     from time            import sleep, time
-    # ~ from random          import randint # test purpose
     from multiprocessing import Process, Queue
     from signal          import signal, SIGTERM, SIGHUP
     from re              import split as resplit 
@@ -49,16 +48,12 @@ class PCM:
         self.status = {}
         self.cfgname = cfgname
         signal(SIGHUP, self.handle_sighup)
-        self.logger = Logger.Logger()
+        self.logger = Logger.Logger(self.configuration['log_level'])
         self.logger.level = 0
         self.logger.log_time = True
         self.logger.setLogfile('&2')
         self.Configure()
         self.cmdline = Cmdline.Cmdline(args)
-        self.watcherPIDfile = self.configuration['watcher_pid_file']
-        self.watcherStatusFile = self.configuration['watcher_status_file']
-        self.status['engineStartTime'] = None
-        self.status['engineUptime'] = 0
         self.setInitialFiles()
 
     def setInitialFiles(self):

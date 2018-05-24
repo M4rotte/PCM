@@ -44,7 +44,7 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'status':
             
             watcher.status()
-            server.serverStatus()
+            server.status()
             engine.status()
 
 

@@ -7,9 +7,9 @@ from time import strftime
 
 class Logger:
     """Log messages."""
-    def __init__(self):
+    def __init__(self, level = 0):
         self.logfile  = sys.stderr
-        self.level    = 0 # Log everything
+        self.level    = level
         self.log_time = False
 
     def __del__(self): self.logfile.close()

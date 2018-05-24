@@ -18,26 +18,28 @@ class Server:
     
         self.pidfile = configuration['server_pid_file']
         self.logger = logger
-        self.status = {}
-        self.status['serverStartTime'] = None
-        self.status['serverUptime'] = 0
-        self.status['filename'] = configuration['server_status_file']
+        self.state = {}
+        self.state['startTime'] = None
+        self.state['uptime'] = 0
+        self.state['filename'] = configuration['server_state_file']
 
     def start(self):
 
-        if self.serverStatus(): return False
+        if self.status(): return False
         print('Server starts. PID={}'.format(str(getpid())), file=sys.stderr)
         try:
             self.loop = asyncio.get_event_loop()
             self.coro = asyncio.start_server(self.handle_request, '127.0.0.1', 1331, loop=self.loop)
             self.server = self.loop.run_until_complete(self.coro)
             self.logger.log('Serving on {}'.format(self.server.sockets[0].getsockname()),0)
-            self.status['serverStartTime'] = int(time())
+            self.state['serverStartTime'] = int(time())
             with open(self.pidfile,'w') as f: f.write(str(getpid()))
-            with open(self.status['filename'] , 'wb') as f:
-                f.write(dumps(self.status))
+            with open(self.state['filename'] , 'wb') as f:
+                f.write(dumps(self.state))
             signal(SIGUSR1, self.close_server)
-            print('Server is listening on {}. PID={}'.format(self.server.sockets[0].getsockname(),getpid()), file=sys.stderr)
+            message = 'Server is listening on {}. PID={}'.format(self.server.sockets[0].getsockname(),getpid())
+            print(message, file=sys.stderr)
+            self.logger.log(message, 1)
             self.loop.run_forever()
         except OSError as err:
             print(str(err), file=sys.stderr)
@@ -47,22 +49,22 @@ class Server:
             with open(self.pidfile,'r') as f: pid = int(f.readline())
             kill(pid,SIGUSR1)
             unlink(self.pidfile)
-            unlink(self.status['filename'])
+            unlink(self.state['filename'])
             print('Server stopped.', file=sys.stderr)
         except (AttributeError,FileNotFoundError,ProcessLookupError): 
             print('Server not running.', file=sys.stderr)
  
-    def serverStatus(self):
+    def status(self):
         try:
             with open(self.pidfile,'r') as f: pid = int(f.readline())
             try:
-                with open(self.status['filename'], 'rb') as f:
-                    self.status = loads(f.read())
-                    self.status['serverUptime'] = int(time()) - self.status['serverStartTime']
+                with open(self.state['filename'], 'rb') as f:
+                    self.state = loads(f.read())
+                    self.state['serverUptime'] = int(time()) - self.state['serverStartTime']
             except (FileNotFoundError, EOFError): pass
-            with open(self.status['filename'], 'wb') as f:
-                f.write(dumps(self.status))
-            print('Server is running. PID={} Uptime={}'.format(str(pid), str(self.status['serverUptime'])), file=sys.stderr)
+            with open(self.state['filename'], 'wb') as f:
+                f.write(dumps(self.state))
+            print('Server is running. PID={} Uptime={}'.format(str(pid), str(self.state['serverUptime'])), file=sys.stderr)
             return True
         except (AttributeError,OSError) as err:
             try:
