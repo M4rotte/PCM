@@ -76,7 +76,7 @@ class Daemon:
     def run(self):
     
         self.state['startTime'] = int(time())
-        print('PCM '+self.state['name']+' starts. PID={}'.format(str(getpid())), file=sys.stderr)
+        print(self.state['name']+' starts. PID={}'.format(str(getpid())), file=sys.stderr)
         self.logger.log(self.state['name']+' starts. PID={}'.format(str(getpid())), 1)
         while True:
             try:

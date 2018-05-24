@@ -68,43 +68,6 @@ class PCM:
             with open(self.configuration['host_dir']+'/localhost.in', 'w') as f:
                 f.write("IP_ADDRESS = '127.0.0.1'\n")
 
-
-
-    def startWatcher(self):
-        
-        if self.watcherStatus(): return False
-        with open(self.watcherPIDfile,'w') as f: f.write(str(getpid()))
-        self.watcher = Watcher.Watcher(self.configuration, self.logger)
-        self.watcher.run()
-
-    def stopWatcher(self):
-        try:
-            with open(self.watcherPIDfile,'r') as f: pid = int(f.readline())
-            kill(pid,SIGTERM)
-            unlink(self.watcherPIDfile)
-            unlink(self.watcherStatusFile)
-            self.logger.log('Watcher PID='+str(pid)+' is stopped.', 1)
-            print('PCM Watcher stopped.', file=sys.stderr)
-        except (AttributeError, FileNotFoundError, ProcessLookupError): #TODO: Handle each exception individually
-            print('PCM Watcher not running.', file=sys.stderr)
-
-    def watcherStatus(self):
-        try:
-            with open(self.watcherPIDfile,'r') as f: pid = int(f.readline())
-            with open(self.configuration['watcher_status_file'],'rb') as f: self.status = loads(f.read())
-            print('PCM Watcher is running. PID={} Uptime={}'.format(str(pid), str(self.status['uptime'])), file=sys.stderr)
-            return True
-        except (AttributeError,OSError) as err:
-            try:
-                if err.errno == errno.EPERM:
-                    print('PCM Watcher is running but access is denied. PID='+str(pid), file=sys.stderr)
-                    return False
-                else: print(str(err), file=sys.stderr)
-                return False
-            except NameError as ne:
-                print('PCM Watcher not running.', file=sys.stderr)
-                return False
-
     def Configure(self):
         try:
             with open(self.cfgname) as f:

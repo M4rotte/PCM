@@ -23,11 +23,12 @@ if __name__ == '__main__':
     pcm = PCM.PCM('./pcm.cfg', sys.argv)
     server = Server.Server(pcm.configuration, pcm.logger)
     engine = Engine.Engine(pcm.configuration, pcm.logger, 'Engine')
+    watcher = Watcher.Watcher(pcm.configuration, pcm.logger, 'Watcher')
     try:
         if sys.argv[1] == 'stop':
             server.stop()
             engine.stop()
-            pcm.stopWatcher()
+            watcher.stop()
         elif sys.argv[1] == 'start':
             p1 = subprocess.Popen([sys.argv[0],'listen'], shell=False)
             p2 = subprocess.Popen([sys.argv[0],'engine'], shell=False)
@@ -37,10 +38,12 @@ if __name__ == '__main__':
             engine.createSSHClient()
             engine.start()
             engine.run()
-        elif sys.argv[1] == 'watcher': pcm.startWatcher()
+        elif sys.argv[1] == 'watcher':
+            watcher.start()
+            watcher.run()
         elif sys.argv[1] == 'status':
             
-            pcm.watcherStatus()
+            watcher.status()
             server.serverStatus()
             engine.status()
 

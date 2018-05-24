@@ -15,7 +15,7 @@ except ImportError as e:
 
 class Watcher(Daemon.Daemon):
 
-    def __init__(self, configuration, logger = None):
+    def __init__(self, configuration, logger = None, name = 'Watcher'):
 
         super().__init__(configuration, logger, 'Watcher')
 
