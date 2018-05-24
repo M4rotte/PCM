@@ -28,10 +28,8 @@ class Daemon:
         self.status['filename'] = configuration[name.lower()+'_status_file']
         print('PCM '+self.status['name']+' starts. PID={}'.format(str(getpid())), file=sys.stderr)
 
-    def lucky(self, possible = 1):
+    def lucky(self, possible):
         
-        # ~ if possible.is_integer(): possible = abs(possible)
-        # ~ else: possible = 1
         if randint(1, possible) == 1: return True
         else: return False
 
