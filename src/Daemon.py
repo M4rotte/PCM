@@ -14,10 +14,12 @@ except ImportError as e:
 
 class Daemon:
 
-    def __init__(self, configuration, logger):
+    def __init__(self, configuration, logger, name):
         
         self.status = {}
         self.logger = logger
+        self.status['startTime'] = None
+        self.status['uptime'] = 0
 
     def lucky(self, nb_possible = 1):
     

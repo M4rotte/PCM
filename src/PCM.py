@@ -75,19 +75,9 @@ class PCM:
         if self.engineStatus(): return False
         with open(self.enginePIDfile,'w') as f: f.write(str(getpid()))
         self.status['filename'] = self.configuration['engine_status_file']
-        self.status['engineStartTime'] = int(time())
+        self.status['startTime'] = int(time())
         self.engine = Engine.Engine(self.configuration, self.logger)
-        while True:
-            try:
-                with open(self.engineStatusFile, 'rb') as f:
-                    self.status = loads(f.read())
-                    self.status['engineUptime'] = int(time()) - self.status['engineStartTime']
-            except (FileNotFoundError, EOFError): pass
-            with open(self.engineStatusFile, 'wb') as f:
-                self.engine.run()
-                f.write(dumps(self.status))
-                if self.engine.lucky(20): self.logger.log('Engine OK, uptime is {}.'.format(self.status['engineUptime']))
-            sleep(1)
+        self.engine.run()
 
     def stopEngine(self):
         try:
@@ -104,7 +94,7 @@ class PCM:
         try:
             with open(self.enginePIDfile,'r') as f: pid = int(f.readline())
             with open(self.engineStatusFile,'rb') as f: self.status = loads(f.read())   
-            print('PCM Engine is running. PID={} Uptime={}'.format(str(pid),str(self.status['engineUptime'])), file=sys.stderr)
+            print('PCM Engine is running. PID={} Uptime={}'.format(str(pid),str(self.status['uptime'])), file=sys.stderr)
             return True
         except (AttributeError,OSError) as err:
             try:
@@ -143,7 +133,7 @@ class PCM:
         try:
             with open(self.watcherPIDfile,'r') as f: pid = int(f.readline())
             with open(self.configuration['watcher_status_file'],'rb') as f: self.status = loads(f.read())
-            print('PCM Watcher is running. PID={} Uptime={}'.format(str(pid), str(self.status['watcherUptime'])), file=sys.stderr)
+            print('PCM Watcher is running. PID={} Uptime={}'.format(str(pid), str(self.status['uptime'])), file=sys.stderr)
             # ~ print(self.status, file=sys.stderr)
             return True
         except (AttributeError,OSError) as err:
