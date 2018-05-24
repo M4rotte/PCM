@@ -19,12 +19,14 @@ except ImportError as e:
     
 class SSHClient:
 
-    def __init__(self, key = None):
+    def __init__(self, key = None, logger = None):
 
         if not key: self.newkey()
         else:
             self.key = key
-        print('Using key "{}"'.format(self.keyhash()), file=sys.stderr)
+        message = 'Using key "{}"'.format(self.keyhash())
+        print(message, file=sys.stderr)
+        logger.log(message, 1)
 
     def newkey(self):
 

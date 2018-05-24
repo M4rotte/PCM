@@ -26,7 +26,7 @@ class Server:
     def start(self):
 
         if self.serverStatus(): return False
-        print('PCM Server starts. PID={}'.format(str(getpid())), file=sys.stderr)
+        print('Server starts. PID={}'.format(str(getpid())), file=sys.stderr)
         try:
             self.loop = asyncio.get_event_loop()
             self.coro = asyncio.start_server(self.handle_request, '127.0.0.1', 1331, loop=self.loop)
@@ -37,7 +37,7 @@ class Server:
             with open(self.status['filename'] , 'wb') as f:
                 f.write(dumps(self.status))
             signal(SIGUSR1, self.close_server)
-            print('PCM server is listening on {}. PID={}'.format(self.server.sockets[0].getsockname(),getpid()), file=sys.stderr)
+            print('Server is listening on {}. PID={}'.format(self.server.sockets[0].getsockname(),getpid()), file=sys.stderr)
             self.loop.run_forever()
         except OSError as err:
             print(str(err), file=sys.stderr)
@@ -48,9 +48,9 @@ class Server:
             kill(pid,SIGUSR1)
             unlink(self.pidfile)
             unlink(self.status['filename'])
-            print('PCM Server stopped.', file=sys.stderr)
+            print('Server stopped.', file=sys.stderr)
         except (AttributeError,FileNotFoundError,ProcessLookupError): 
-            print('PCM Server not running.', file=sys.stderr)
+            print('Server not running.', file=sys.stderr)
  
     def serverStatus(self):
         try:
@@ -62,21 +62,21 @@ class Server:
             except (FileNotFoundError, EOFError): pass
             with open(self.status['filename'], 'wb') as f:
                 f.write(dumps(self.status))
-            print('PCM Server is running. PID={} Uptime={}'.format(str(pid), str(self.status['serverUptime'])), file=sys.stderr)
+            print('Server is running. PID={} Uptime={}'.format(str(pid), str(self.status['serverUptime'])), file=sys.stderr)
             return True
         except (AttributeError,OSError) as err:
             try:
                 if err.errno == errno.EPERM:
-                    print('PCM Server is running but access is denied. PID='+str(pid), file=sys.stderr)
+                    print('Server is running but access is denied. PID='+str(pid), file=sys.stderr)
                     return False
                 else: print(str(err), file=sys.stderr)
                 return False
             except NameError as ne:
-                print('PCM Server not running.', file=sys.stderr)
+                print('Server not running.', file=sys.stderr)
                 return False
         
     def close_server(self, signum, frame):
-        self.logger.log('PCM Server PID='+str(getpid())+' received signal '+str(signum)+' ('+str(frame)+'). Stopping…', 0)
+        self.logger.log('Server PID='+str(getpid())+' received signal '+str(signum)+' ('+str(frame)+'). Stopping…', 1)
         self.server.close()
         self.loop.run_until_complete(server.wait_closed())
         self.loop.close()

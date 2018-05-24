@@ -10,7 +10,7 @@ try:
     from signal import signal, SIGTERM, SIGINT, SIGCHLD
     import subprocess
     import PCM
-    import Server, Watcher
+    import Server, Watcher, Engine
 
 except ImportError as e:
 
@@ -22,23 +22,27 @@ if __name__ == '__main__':
 
     pcm = PCM.PCM('./pcm.cfg', sys.argv)
     server = Server.Server(pcm.configuration, pcm.logger)
+    engine = Engine.Engine(pcm.configuration, pcm.logger, 'Engine')
     try:
         if sys.argv[1] == 'stop':
             server.stop()
-            pcm.stopEngine()
+            engine.stop()
             pcm.stopWatcher()
         elif sys.argv[1] == 'start':
             p1 = subprocess.Popen([sys.argv[0],'listen'], shell=False)
             p2 = subprocess.Popen([sys.argv[0],'engine'], shell=False)
             p3 = subprocess.Popen([sys.argv[0],'watcher'], shell=False)
         elif sys.argv[1] == 'listen': server.start()
-        elif sys.argv[1] == 'engine': pcm.startEngine()
+        elif sys.argv[1] == 'engine':
+            engine.createSSHClient()
+            engine.start()
+            engine.run()
         elif sys.argv[1] == 'watcher': pcm.startWatcher()
         elif sys.argv[1] == 'status':
             
             pcm.watcherStatus()
             server.serverStatus()
-            pcm.engineStatus()
+            engine.status()
 
 
     except (IndexError, FileNotFoundError, NameError) as e: print(str(e), file=sys.stderr)

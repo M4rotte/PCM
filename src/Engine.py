@@ -18,11 +18,14 @@ except ImportError as e:
 
 class Engine(Daemon.Daemon):
 
-    def __init__(self, configuration, logger = None):
+    def __init__(self, configuration, logger = None, name = 'Engine'):
     
         super().__init__(configuration, logger, 'Engine')
-        self.SSHClient = SSHClient.SSHClient(self.readKeyFile(configuration['rsa_key']))
-        self.SSHClient.saveKey(configuration['rsa_key'], configuration['rsa_key_pub'])
+    
+    def createSSHClient(self):
+        
+        self.SSHClient = SSHClient.SSHClient(self.readKeyFile(self.configuration['rsa_key']), self.logger)
+        self.SSHClient.saveKey(self.configuration['rsa_key'], self.configuration['rsa_key_pub'])
     
     def readKeyFile(self, filename):
         
@@ -36,4 +39,4 @@ class Engine(Daemon.Daemon):
         except (ValueError,FileNotFoundError,EOFError): return None
         
 
-        
+

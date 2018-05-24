@@ -55,9 +55,7 @@ class PCM:
         self.logger.setLogfile('&2')
         self.Configure()
         self.cmdline = Cmdline.Cmdline(args)
-        self.enginePIDfile = self.configuration['engine_pid_file']
         self.watcherPIDfile = self.configuration['watcher_pid_file']
-        self.engineStatusFile = self.configuration['engine_status_file']
         self.watcherStatusFile = self.configuration['watcher_status_file']
         self.status['engineStartTime'] = None
         self.status['engineUptime'] = 0
@@ -70,44 +68,7 @@ class PCM:
             with open(self.configuration['host_dir']+'/localhost.in', 'w') as f:
                 f.write("IP_ADDRESS = '127.0.0.1'\n")
 
-    def startEngine(self):
-        
-        if self.engineStatus(): return False
-        with open(self.enginePIDfile,'w') as f: f.write(str(getpid()))
-        self.engine = Engine.Engine(self.configuration, self.logger)
-        self.engine.run()
 
-    def stopEngine(self):
-        try:
-            with open(self.enginePIDfile,'r') as f: pid = int(f.readline())
-            kill(pid,SIGTERM)
-            unlink(self.enginePIDfile)
-            unlink(self.engineStatusFile)
-            self.logger.log('PCM Engine PID='+str(pid)+' is stopped.')
-            print('PCM Engine  stopped.', file=sys.stderr)
-        except (AttributeError, ProcessLookupError, FileNotFoundError): #TODO: Handle each exception individually
-            print('PCM Engine not running.', file=sys.stderr)
-
-    def engineStatus(self):
-        try:
-            with open(self.enginePIDfile,'r') as f: pid = int(f.readline())
-            with open(self.engineStatusFile,'rb') as f: self.status = loads(f.read())   
-            print('PCM Engine is running. PID={} Uptime={}'.format(str(pid),str(self.status['uptime'])), file=sys.stderr)
-            return True
-        except (AttributeError,OSError,ValueError) as err:
-            try:
-                if err.errno == errno.EPERM:
-                    print('PCM Engine is running but access is denied. PID='+str(pid), file=sys.stderr)
-                    return False
-                else: print(str(err), file=sys.stderr)
-                return False
-            except (NameError,AttributeError) as ne:
-                print('PCM Engine not running.', file=sys.stderr)
-                return False
-
-        except EOFError:
-            
-            print('PCM Engine is running. PID={}'.format(str(pid)), file=sys.stderr)
 
     def startWatcher(self):
         
@@ -122,7 +83,7 @@ class PCM:
             kill(pid,SIGTERM)
             unlink(self.watcherPIDfile)
             unlink(self.watcherStatusFile)
-            self.logger.log('PCM Watcher PID='+str(pid)+' is stopped.')
+            self.logger.log('Watcher PID='+str(pid)+' is stopped.', 1)
             print('PCM Watcher stopped.', file=sys.stderr)
         except (AttributeError, FileNotFoundError, ProcessLookupError): #TODO: Handle each exception individually
             print('PCM Watcher not running.', file=sys.stderr)
@@ -132,7 +93,6 @@ class PCM:
             with open(self.watcherPIDfile,'r') as f: pid = int(f.readline())
             with open(self.configuration['watcher_status_file'],'rb') as f: self.status = loads(f.read())
             print('PCM Watcher is running. PID={} Uptime={}'.format(str(pid), str(self.status['uptime'])), file=sys.stderr)
-            # ~ print(self.status, file=sys.stderr)
             return True
         except (AttributeError,OSError) as err:
             try:
@@ -160,7 +120,7 @@ class PCM:
             self.logger.log('Configuration OK')
             return True
         except Exception as e:
-            self.logger.log(' *** Configuration error! − '+str(e)+' ***')
+            self.logger.log(' *** Configuration error! − '+str(e)+' ***', 4)
             return False
 
     
