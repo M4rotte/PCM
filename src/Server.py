@@ -49,7 +49,7 @@ class Server:
             unlink(self.pidfile)
             unlink(self.status['filename'])
             print('PCM Server stopped.', file=sys.stderr)
-        except (AttributeError,FileNotFoundError): 
+        except (AttributeError,FileNotFoundError,ProcessLookupError): 
             print('PCM Server not running.', file=sys.stderr)
  
     def serverStatus(self):

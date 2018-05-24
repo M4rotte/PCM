@@ -94,14 +94,14 @@ class PCM:
             with open(self.engineStatusFile,'rb') as f: self.status = loads(f.read())   
             print('PCM Engine is running. PID={} Uptime={}'.format(str(pid),str(self.status['uptime'])), file=sys.stderr)
             return True
-        except (AttributeError,OSError) as err:
+        except (AttributeError,OSError,ValueError) as err:
             try:
                 if err.errno == errno.EPERM:
                     print('PCM Engine is running but access is denied. PID='+str(pid), file=sys.stderr)
                     return False
                 else: print(str(err), file=sys.stderr)
                 return False
-            except NameError as ne:
+            except (NameError,AttributeError) as ne:
                 print('PCM Engine not running.', file=sys.stderr)
                 return False
 

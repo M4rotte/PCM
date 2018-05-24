@@ -1,1 +1,2 @@
 Handle the case where PID file still exists and no more process is alive
+Move start(), stop() and status() in Daemon class and call them directly from the main script
