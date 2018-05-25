@@ -26,7 +26,6 @@ class Listener:
 
         self.state['name'] = 'listener'
         self.state['startTime'] = int(time())
-        self.state['uptime'] = 0
         self.state['filename'] = configuration['pcm_dir']+'/listener.state'
 
     def process_exists(self):

@@ -10,7 +10,7 @@ try:
     from pickle import dumps, loads
     from os import getpid, kill, unlink, _exit, path
     from signal import signal, SIGTERM, SIGHUP
-    from psutil import process_iter
+    from psutil import process_iter, Process
 
 except ImportError as e:
 
@@ -83,8 +83,8 @@ class Daemon:
         
         pid = self.process_exists()
         if pid:
-            self.load_state()
-            print(self.state['name']+' is running. PID={} Uptime={}'.format(str(pid),self.state['uptime']), file=sys.stderr)
+            uptime = time() - Process(pid).create_time()
+            print(self.state['name']+' is running. PID={} Uptime={}'.format(str(pid),str(int(uptime))), file=sys.stderr)
             return True
         else:
             print(self.state['name']+' not running.', file=sys.stderr)
@@ -96,7 +96,7 @@ class Daemon:
         self.logger.log(self.state['name']+' starts. PID={}'.format(str(getpid())), 1)
         while True:
             self.load_state()
-            self.state['uptime'] = int(time()) - self.state['startTime']
+            self.state['uptime'] = Process(getpid()).create_time() - time()
             self.process()
             self.save_state()
             sleep(1)

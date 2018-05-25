@@ -1,3 +1,2 @@
-1)Handle uptime in Daemon the way is done in Listener
-2)Make Listener subclass Daemon
+Make Listener subclass Daemon
 
