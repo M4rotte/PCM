@@ -21,18 +21,23 @@ except ImportError as e:
 class Daemon:
 
     def __init__(self, configuration, logger, name):
-        
+
         self.state = {}
         self.logger = logger
-        self.state['name'] = name
-        self.state['startTime'] = None
-        self.state['uptime'] = 0
+        self.name = name
         self.configuration = configuration
+        self.set_initial_state(name, self.configuration)
+    
+    def set_initial_state(self, name, configuration):
+
+        self.state['name'] = name
+        self.state['startTime'] = int(time())
+        self.state['uptime'] = 0
         self.state['filename'] = configuration['pcm_dir']+'/'+self.state['name'].lower()+'.state'
 
-    def lucky(self, possible):
+    def lucky(self, chance):
         
-        if randint(1, possible) == 1: return True
+        if randint(1, chance) == 1: return True
         else: return False
 
     def process_exists(self):
@@ -41,6 +46,21 @@ class Daemon:
         for p in process_iter():
             if p.cmdline() == cmdline: return p.pid
         return False
+
+    def load_state(self):
+        
+        try:
+            with open(self.state['filename'], 'rb') as f:
+                self.state = loads(f.read())
+        except FileNotFoundError: self.set_initial_state(self.name,self.configuration)
+        except (Exception) as e: print(str(e))
+
+    def save_state(self):
+
+        try:
+            with open(self.state['filename'], 'wb') as f:
+                f.write(dumps(self.state))
+        except (Exception) as e: print(str(e))
 
     def start(self):
 
@@ -63,7 +83,8 @@ class Daemon:
         
         pid = self.process_exists()
         if pid:
-            print(self.state['name']+' is running. PID={}'.format(str(pid)), file=sys.stderr)
+            self.load_state()
+            print(self.state['name']+' is running. PID={} Uptime={}'.format(str(pid),self.state['uptime']), file=sys.stderr)
             return True
         else:
             print(self.state['name']+' not running.', file=sys.stderr)
@@ -72,17 +93,12 @@ class Daemon:
 
     def run(self):
     
-        self.state['startTime'] = int(time())
         self.logger.log(self.state['name']+' starts. PID={}'.format(str(getpid())), 1)
         while True:
-            try:
-                with open(self.state['filename'], 'rb') as f:
-                    self.state = loads(f.read())
-                    self.state['uptime'] = int(time()) - self.state['startTime']
-            except (FileNotFoundError, EOFError): pass
-            with open(self.state['filename'], 'wb') as f:
-                f.write(dumps(self.state))
+            self.load_state()
+            self.state['uptime'] = int(time()) - self.state['startTime']
             self.process()
+            self.save_state()
             sleep(1)
 
     def process(self):
