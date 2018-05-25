@@ -9,7 +9,7 @@ from os import getpid, kill, unlink, _exit, path
 from signal import signal, SIGTERM, SIGUSR1
 from time import sleep, time
 from pickle import dumps,loads
-from psutil import process_iter
+from psutil import process_iter, Process
 
 import PCM
 
@@ -19,9 +19,15 @@ class Listener:
     
         self.logger = logger
         self.state = {}
-        self.state['startTime'] = None
+        self.configuration = configuration
+        self.set_initial_state(self.configuration)
+
+    def set_initial_state(self, configuration):
+
+        self.state['name'] = 'listener'
+        self.state['startTime'] = int(time())
         self.state['uptime'] = 0
-        self.state['filename'] = configuration['pcm_dir']+'/'+'listener.state'
+        self.state['filename'] = configuration['pcm_dir']+'/listener.state'
 
     def process_exists(self):
                 
@@ -29,6 +35,21 @@ class Listener:
         for p in process_iter():
             if p.cmdline() == cmdline: return p.pid
         return False
+
+    def load_state(self):
+        
+        try:
+            with open(self.state['filename'], 'rb') as f:
+                self.state = loads(f.read())
+        except FileNotFoundError: self.set_initial_state(self.configuration)
+        except (Exception) as e: print(str(e))
+
+    def save_state(self):
+
+        try:
+            with open(self.state['filename'], 'wb') as f:
+                f.write(dumps(self.state))
+        except (Exception) as e: print(str(e))
 
     def start(self):
 
@@ -39,10 +60,8 @@ class Listener:
             self.coro = asyncio.start_server(self.handle_request, '127.0.0.1', 1331, loop=self.loop)
             self.server = self.loop.run_until_complete(self.coro)
             self.logger.log('Serving on {}'.format(self.server.sockets[0].getsockname()),0)
-            self.state['startTime'] = int(time())
-            with open(self.state['filename'] , 'wb') as f:
-                f.write(dumps(self.state))
             signal(SIGUSR1, self.close_server)
+            self.save_state()
             message = 'Listening on {}. PID={}'.format(self.server.sockets[0].getsockname(),getpid())
             print(message, file=sys.stderr)
             self.logger.log(message, 1)
@@ -70,7 +89,8 @@ class Listener:
         pid = self.process_exists()
         
         if pid:
-            print('Listener is running. PID={}'.format(str(pid)), file=sys.stderr)
+            uptime = time() - Process(pid).create_time()
+            print('Listener is running. PID={} Uptime={}'.format(str(pid), str(int(uptime))), file=sys.stderr)
             return True
         else:
             print('Listener is not running.', file=sys.stderr)
