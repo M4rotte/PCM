@@ -37,11 +37,9 @@ class Daemon:
 
     def process_exists(self):
                 
-        args = ['python3']
-        args += [sys.argv[0]]
-        args += [self.state['name'].lower()]
+        cmdline = [path.basename(sys.executable),sys.argv[0],self.state['name'].lower()]
         for p in process_iter():
-            if p.cmdline() == args: return p.pid
+            if p.cmdline() == cmdline: return p.pid
         return False
 
     def start(self):
