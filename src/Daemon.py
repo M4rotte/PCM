@@ -8,7 +8,7 @@ try:
     from random import randint
     from time import time, sleep
     from pickle import dumps, loads
-    from os import getpid, kill, unlink
+    from os import getpid, kill, unlink, _exit
     from signal import signal, SIGTERM, SIGHUP
 
 except ImportError as e:
@@ -37,7 +37,8 @@ class Daemon:
 
     def start(self):
         
-        if self.status(): return False
+        if self.status():
+            _exit(0)
         with open(self.state['PIDfile'],'w') as f: f.write(str(getpid()))
         print(self.state['name']+' starts. PID={}'.format(str(getpid())), file=sys.stderr)
 

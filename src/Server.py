@@ -80,7 +80,7 @@ class Server:
         self.logger.log('Server PID='+str(getpid())+' received signal '+str(signum)+' ('+str(frame)+'). Stopping…', 1)
         self.loop.stop()
         self.server.close()
-        exit(0)
+        _exit(0)
 
     def process_request(self,request):
 
