@@ -10,7 +10,7 @@ try:
     from signal import signal, SIGTERM, SIGINT, SIGCHLD
     import subprocess
     import PCM
-    import Server, Watcher, Engine
+    import Listener, Watcher, Engine
 
 except ImportError as e:
 
@@ -21,19 +21,19 @@ except ImportError as e:
 if __name__ == '__main__':
 
     pcm = PCM.PCM('./pcm.cfg', sys.argv)
-    server = Server.Server(pcm.configuration, pcm.logger)
-    engine = Engine.Engine(pcm.configuration, pcm.logger, 'Engine')
-    watcher = Watcher.Watcher(pcm.configuration, pcm.logger, 'Watcher')
+    listener = Listener.Listener(pcm.configuration,pcm.logger)
+    engine = Engine.Engine(pcm.configuration,pcm.logger,'Engine')
+    watcher = Watcher.Watcher(pcm.configuration,pcm.logger,'Watcher')
     try:
         if sys.argv[1] == 'stop':
-            server.stop()
+            listener.stop()
             engine.stop()
             watcher.stop()
         elif sys.argv[1] == 'start':
-            p1 = subprocess.Popen([sys.argv[0],'listen'], shell=False)
-            if not engine.status(): p2 = subprocess.Popen([sys.argv[0],'engine'], shell=False)
-            if not watcher.status(): p3 = subprocess.Popen([sys.argv[0],'watcher'], shell=False)
-        elif sys.argv[1] == 'listen': server.start()
+            if not listener.status():  p1 = subprocess.Popen([sys.argv[0],'listener'],shell=False)
+            if not engine.status():  p2 = subprocess.Popen([sys.argv[0],'engine'],shell=False)
+            if not watcher.status(): p3 = subprocess.Popen([sys.argv[0],'watcher'],shell=False)
+        elif sys.argv[1] == 'listener': listener.start()
         elif sys.argv[1] == 'engine':
             engine.createSSHClient()
             engine.start()
@@ -43,7 +43,7 @@ if __name__ == '__main__':
             watcher.run()
         elif sys.argv[1] == 'status':
             watcher.status()
-            server.status()
+            listener.status()
             engine.status()
 
 

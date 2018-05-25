@@ -28,7 +28,7 @@ class Daemon:
         self.state['startTime'] = None
         self.state['uptime'] = 0
         self.configuration = configuration
-        self.state['filename'] = self.configuration[self.state['name'].lower()+'_state_file']
+        self.state['filename'] = configuration['pcm_dir']+'/'+self.state['name'].lower()+'.state'
 
     def lucky(self, possible):
         
@@ -73,7 +73,6 @@ class Daemon:
     def run(self):
     
         self.state['startTime'] = int(time())
-        print(self.state['name']+' starts. PID={}'.format(str(getpid())), file=sys.stderr)
         self.logger.log(self.state['name']+' starts. PID={}'.format(str(getpid())), 1)
         while True:
             try:
