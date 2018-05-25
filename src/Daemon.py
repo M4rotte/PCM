@@ -8,8 +8,9 @@ try:
     from random import randint
     from time import time, sleep
     from pickle import dumps, loads
-    from os import getpid, kill, unlink, _exit
+    from os import getpid, kill, unlink, _exit, path
     from signal import signal, SIGTERM, SIGHUP
+    from psutil import process_iter
 
 except ImportError as e:
 
@@ -27,52 +28,49 @@ class Daemon:
         self.state['startTime'] = None
         self.state['uptime'] = 0
         self.configuration = configuration
-        self.state['filename'] = self.configuration[name.lower()+'_state_file']
-        self.state['PIDfile'] = self.configuration[name.lower()+'_pid_file']
+        self.state['filename'] = self.configuration[self.state['name'].lower()+'_state_file']
 
     def lucky(self, possible):
         
         if randint(1, possible) == 1: return True
         else: return False
 
+    def process_exists(self):
+                
+        args = ['python3']
+        args += [sys.argv[0]]
+        args += [self.state['name'].lower()]
+        for p in process_iter():
+            if p.cmdline() == args: return p.pid
+        return False
+
     def start(self):
-        
-        if self.status():
-            _exit(0)
-        with open(self.state['PIDfile'],'w') as f: f.write(str(getpid()))
+
         print(self.state['name']+' starts. PID={}'.format(str(getpid())), file=sys.stderr)
 
     def stop(self):
-        try:
-            with open(self.state['PIDfile'],'r') as f: pid = int(f.readline())
+        
+        pid = self.process_exists()
+        if pid:
             kill(pid,SIGTERM)
-            unlink(self.state['PIDfile'])
             unlink(self.state['filename'])
-            self.logger.log(self.state['name']+' PID='+str(pid)+' is stopped.', 1)
             print(self.state['name']+' stopped.', file=sys.stderr)
-        except (AttributeError, ProcessLookupError, FileNotFoundError): #TODO: Handle each exception individually
+            self.logger.log(self.state['name']+' PID='+str(pid)+' stopped.', 1)
+            return True
+        else:
             print(self.state['name']+' not running.', file=sys.stderr)
+            return False
 
     def status(self):
-        try:
-            with open(self.state['PIDfile'],'r') as f: pid = int(f.readline())
-            with open(self.state['filename'],'rb') as f: self.state = loads(f.read())   
-            print(self.state['name']+' is running. PID={} Uptime={}'.format(str(pid),str(self.state['uptime'])), file=sys.stderr)
+        
+        pid = self.process_exists()
+        if pid:
+            print(self.state['name']+' is running. PID={}'.format(str(pid)), file=sys.stderr)
             return True
-        except (AttributeError,OSError,ValueError) as err:
-            try:
-                if err.errno == errno.EPERM:
-                    print(self.state['name']+' is running but access is denied. PID='+str(pid), file=sys.stderr)
-                    return False
-                else: print(str(err), file=sys.stderr)
-                return False
-            except (NameError,AttributeError) as ne:
-                print(self.state['name']+' not running.', file=sys.stderr)
-                return False
+        else:
+            print(self.state['name']+' not running.', file=sys.stderr)
+            return False
 
-        except EOFError:
-            
-            print('PCM '+self.state['name']+' is running. PID={}'.format(str(pid)), file=sys.stderr)
 
     def run(self):
     

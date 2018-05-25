@@ -31,8 +31,8 @@ if __name__ == '__main__':
             watcher.stop()
         elif sys.argv[1] == 'start':
             p1 = subprocess.Popen([sys.argv[0],'listen'], shell=False)
-            p2 = subprocess.Popen([sys.argv[0],'engine'], shell=False)
-            p3 = subprocess.Popen([sys.argv[0],'watcher'], shell=False)
+            if not engine.status(): p2 = subprocess.Popen([sys.argv[0],'engine'], shell=False)
+            if not watcher.status(): p3 = subprocess.Popen([sys.argv[0],'watcher'], shell=False)
         elif sys.argv[1] == 'listen': server.start()
         elif sys.argv[1] == 'engine':
             engine.createSSHClient()
