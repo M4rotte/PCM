@@ -32,7 +32,7 @@ class Server:
             self.coro = asyncio.start_server(self.handle_request, '127.0.0.1', 1331, loop=self.loop)
             self.server = self.loop.run_until_complete(self.coro)
             self.logger.log('Serving on {}'.format(self.server.sockets[0].getsockname()),0)
-            self.state['serverStartTime'] = int(time())
+            self.state['startTime'] = int(time())
             with open(self.pidfile,'w') as f: f.write(str(getpid()))
             with open(self.state['filename'] , 'wb') as f:
                 f.write(dumps(self.state))
@@ -60,28 +60,27 @@ class Server:
             try:
                 with open(self.state['filename'], 'rb') as f:
                     self.state = loads(f.read())
-                    self.state['serverUptime'] = int(time()) - self.state['serverStartTime']
-            except (FileNotFoundError, EOFError): pass
+                    self.state['uptime'] = int(time()) - self.state['startTime']
+            except (FileNotFoundError, EOFError) as e: pass
             with open(self.state['filename'], 'wb') as f:
                 f.write(dumps(self.state))
-            print('Server is running. PID={} Uptime={}'.format(str(pid), str(self.state['serverUptime'])), file=sys.stderr)
+            print('Server is running. PID={} Uptime={}'.format(str(pid), str(self.state['uptime'])), file=sys.stderr)
             return True
         except (AttributeError,OSError) as err:
             try:
                 if err.errno == errno.EPERM:
                     print('Server is running but access is denied. PID='+str(pid), file=sys.stderr)
                     return False
-                else: print(str(err), file=sys.stderr)
-                return False
+                else: return False
             except NameError as ne:
                 print('Server not running.', file=sys.stderr)
                 return False
         
     def close_server(self, signum, frame):
         self.logger.log('Server PID='+str(getpid())+' received signal '+str(signum)+' ('+str(frame)+'). Stopping…', 1)
+        self.loop.stop()
         self.server.close()
-        self.loop.run_until_complete(server.wait_closed())
-        self.loop.close()
+        exit(0)
 
     def process_request(self,request):
 

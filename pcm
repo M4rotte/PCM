@@ -42,7 +42,6 @@ if __name__ == '__main__':
             watcher.start()
             watcher.run()
         elif sys.argv[1] == 'status':
-            
             watcher.status()
             server.status()
             engine.status()

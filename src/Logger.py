@@ -7,9 +7,8 @@ from time import strftime
 
 class Logger:
     """Log messages."""
-    def __init__(self, level = 0):
+    def __init__(self):
         self.logfile  = sys.stderr
-        self.level    = level
         self.log_time = False
 
     def __del__(self): self.logfile.close()
@@ -29,6 +28,10 @@ class Logger:
         elif filename == '&2': self.logfile = sys.stderr
         else: self.logfile = open(filename,'a')
 
+    def setLogLevel(self, level):
+        """Set Logger minimum log level."""
+        self.level = level
+        
     def flush(self): self.logfile.flush()
 
     def purge(self):

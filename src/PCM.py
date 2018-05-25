@@ -45,15 +45,16 @@ class PCM:
     def __init__(self, cfgname = default_cfgname, args = sys.argv):
 
         self.configuration = {}
-        self.status = {}
+        self.state = {}
         self.cfgname = cfgname
         signal(SIGHUP, self.handle_sighup)
-        self.logger = Logger.Logger(self.configuration['log_level'])
+        self.logger = Logger.Logger()
         self.logger.level = 0
         self.logger.log_time = True
         self.logger.setLogfile('&2')
-        self.Configure()
         self.cmdline = Cmdline.Cmdline(args)
+        self.Configure()
+        self.logger.setLogLevel(int(self.configuration['log_level']))
         self.setInitialFiles()
 
     def setInitialFiles(self):
@@ -75,7 +76,6 @@ class PCM:
                     except IndexError: continue # empty line
             try: self.logger.setLogfile(self.configuration['log_filename'])
             except KeyError: self.logger.setLogfile('./pcm.log')
-            self.logger.log('Configuration OK')
             return True
         except Exception as e:
             self.logger.log(' *** Configuration error! − '+str(e)+' ***', 4)
