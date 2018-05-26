@@ -20,16 +20,14 @@ class Daemon:
         self.logger = logger
         self.name = name
         self.configuration = configuration
-        self.set_initial_state(name, self.configuration)
+        self.set_initial_state()
   
-    def set_initial_state(self, name, configuration):
-        self.state['name'] = name
-        self.state['startTime'] = int(time())
+    def set_initial_state(self):
+        self.state['name'] = self.name
+        self.state['startTime'] = time()
         self.state['uptime'] = 0
-        self.state['filename'] = configuration['pcm_dir']+'/'+self.state['name'].lower()+'.state'
-
-    def lucky(self, chance):
-        return randint(1, chance) == 1
+        self.state['startReportTime'] = time()
+        self.state['filename'] = self.configuration['pcm_dir']+'/'+self.state['name'].lower()+'.state'
 
     def process_exists(self):
         """Return True if the process is found in the processes table."""
@@ -43,7 +41,7 @@ class Daemon:
         try:
             with open(self.state['filename'], 'rb') as f:
                 self.state = loads(f.read())
-        except FileNotFoundError: self.set_initial_state(self.name,self.configuration)
+        except FileNotFoundError: self.set_initial_state()
         except (Exception) as e: print(str(e))
 
     def save_state(self):
@@ -84,11 +82,14 @@ class Daemon:
         while True:
             self.load_state()
             self.state['uptime'] = time() - Process(getpid()).create_time()
+            self.state['reportTime'] = time() - self.state['startReportTime']
             self.process()
             self.save_state()
             sleep(1)
 
     def process(self):
-        
-        if self.lucky(10): self.logger.log(self.state['name']+' OK, uptime is {}.'.format(str(int(self.state['uptime']))))
+        """Daemon main procedure."""
+        if self.state['reportTime'] >= int(self.configuration['report_time']):
+            self.logger.log(self.state['name']+' OK, uptime is {}.'.format(str(int(self.state['uptime']))))
+            self.state['startReportTime'] = time()
 
