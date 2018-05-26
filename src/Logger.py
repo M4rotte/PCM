@@ -1,10 +1,7 @@
 # pylint: disable=bad-whitespace,bad-continuation,line-too-long,multiple-statements,trailing-whitespace,trailing-newlines
-
-"""Logger"""
-
+"""PCM Logger"""
 import sys
 from time import strftime
-
 class Logger:
     """Log messages."""
     def __init__(self):

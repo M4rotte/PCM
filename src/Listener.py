@@ -1,8 +1,5 @@
 # pylint: disable=bad-whitespace,bad-continuation,line-too-long,multiple-statements,trailing-whitespace,trailing-newlines
-"""PCM
-    PCM Listener
-"""
-
+"""PCM Listener."""
 import sys
 import asyncio
 from os import getpid, kill, unlink, _exit, path
@@ -10,20 +7,15 @@ from signal import signal, SIGTERM, SIGUSR1
 from time import sleep, time
 from pickle import dumps,loads
 from psutil import process_iter, Process
-import Daemon
-
-import PCM
+import PCM, Daemon
 
 class Listener(Daemon.Daemon):
-
     def __init__(self, configuration, logger = None, name = 'Listener'):
-    
         super().__init__(configuration, logger, 'Listener')
 
     def start(self):
-
+        """Start the listener process."""
         print('Listener starts. PID={}'.format(str(getpid())), file=sys.stderr)
-        
         try:
             self.loop = asyncio.get_event_loop()
             self.coro = asyncio.start_server(self.handle_request, '127.0.0.1', 1331, loop=self.loop)
@@ -35,11 +27,9 @@ class Listener(Daemon.Daemon):
             print(message, file=sys.stderr)
             self.logger.log(message, 1)
             self.loop.run_forever()
-            
         except OSError as err:
             print(str(err), file=sys.stderr)
 
-        
     def close_server(self, signum, frame):
         self.logger.log('Server PID='+str(getpid())+' received signal '+str(signum)+' ('+str(frame)+'). Stopping…', 1)
         self.loop.stop()

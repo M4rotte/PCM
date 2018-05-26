@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
-
+"""PCM Command line."""
 class Cmdline:
-
     def __init__(self, args = [], translations = {'--help':'-h'}):
         """Create a dictionnary of options and a list of tags. Tags are the elements of the argument array which are not an option nor an option value."""
         self.options = {}
@@ -46,7 +45,4 @@ class Cmdline:
         print('TAGS     : '+str(self.tags))
         print('LAST TAG : '+str(self.lastTag()))
 
-
-if __name__ == '__main__':
-    
-    sys.exit(100)
+if __name__ == '__main__': sys.exit(100)

@@ -1,8 +1,6 @@
 # pylint: disable=bad-whitespace,bad-continuation,line-too-long,multiple-statements,trailing-whitespace,trailing-newlines
-"""PCM"""
-
+"""PCM class."""
 import sys
-
 try:
     from time            import sleep, time
     from multiprocessing import Process, Queue
@@ -12,9 +10,7 @@ try:
     from os.path         import isfile, isdir
     from pickle          import dumps, loads
     import Logger, Cmdline
-
 except ImportError as e:
-
     print(str(e), file=sys.stderr)
     print('Cannot find the module(s) listed above. Exiting.', file=sys.stderr)
     sys.exit(1)
@@ -35,15 +31,11 @@ def str2bool(v, true=("yes", "true", "1")):
     return v.lower() in true
 
 class PCM:
-    """PCM"""
+    """PCM class."""
     default_cfgname = './pcm.cfg'
-
-    def handle_sighup(self, signum, frame):
-        
-        self.Configure()
+    def handle_sighup(self, signum, frame): self.Configure()
 
     def __init__(self, cfgname = default_cfgname, args = sys.argv):
-
         self.configuration = {}
         self.state = {}
         self.cfgname = cfgname
@@ -56,15 +48,15 @@ class PCM:
         self.Configure()
         self.logger.setLogLevel(int(self.configuration['log_level']))
         self.setInitialFiles()
-
     def setInitialFiles(self):
-        
+        """Create the files needed by PCM if they don’t already exist."""
         if not isdir(self.configuration['host_dir']): mkdir(self.configuration['host_dir'])
         if not isfile(self.configuration['host_dir']+'/localhost.in'):
             with open(self.configuration['host_dir']+'/localhost.in', 'w') as f:
                 f.write("IP_ADDRESS = '127.0.0.1'\n")
 
     def Configure(self):
+        """Reload the configuration."""
         try:
             with open(self.cfgname) as f:
                 for l in f:
