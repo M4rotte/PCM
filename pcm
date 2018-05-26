@@ -21,27 +21,31 @@ if __name__ == '__main__':
     engine = Engine.Engine(pcm.configuration,pcm.logger,'Engine')
     watcher = Watcher.Watcher(pcm.configuration,pcm.logger,'Watcher')
     try:
-        if sys.argv[1] == 'stop':
-            listener.stop()
-            engine.stop()
-            watcher.stop()
-        elif sys.argv[1] == 'start':
-            if not listener.status():  p1 = subprocess.Popen([sys.argv[0],'listener'],shell=False)
-            if not engine.status():  p2 = subprocess.Popen([sys.argv[0],'engine'],shell=False)
-            if not watcher.status(): p3 = subprocess.Popen([sys.argv[0],'watcher'],shell=False)
-        elif sys.argv[1] == 'listener':
-            listener.start()
-            listener.watch()
-        elif sys.argv[1] == 'engine':
-            engine.createSSHClient()
-            engine.start()
-            engine.run()
-        elif sys.argv[1] == 'watcher':
-            watcher.start()
-            watcher.run()
-        elif sys.argv[1] == 'status':
-            watcher.status()
-            listener.status()
-            engine.status()
-    except (IndexError, FileNotFoundError, NameError) as e: print(str(e), file=sys.stderr)
+        # Only one argument in the command line
+        if len(sys.argv) == 2:
+            if sys.argv[1] == 'stop':
+                listener.stop()
+                engine.stop()
+                watcher.stop()
+            elif sys.argv[1] == 'start':
+                if not listener.status():  p1 = subprocess.Popen([sys.argv[0],'listener'],shell=False)
+                if not engine.status():  p2 = subprocess.Popen([sys.argv[0],'engine'],shell=False)
+                if not watcher.status(): p3 = subprocess.Popen([sys.argv[0],'watcher'],shell=False)
+            elif sys.argv[1] == 'listener':
+                listener.start()
+            elif sys.argv[1] == 'engine':
+                engine.createSSHClient()
+                engine.start()
+                engine.run()
+            elif sys.argv[1] == 'watcher':
+                watcher.start()
+                watcher.run()
+            elif sys.argv[1] == 'status':
+                watcher.status()
+                listener.status()
+                engine.status()
+        # More than one argument in the command line
+        else:
+            pass
+    except (Exception) as e: print(' *** Fix me! *** : '+str(e), file=sys.stderr)
 

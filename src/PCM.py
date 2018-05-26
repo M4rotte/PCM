@@ -34,10 +34,10 @@ class PCM:
     default_cfgname = './pcm.cfg'
     def handle_sighup(self, signum, frame):
         """Reload configuration when a SIGHUP is received."""
-        self.Configure()
+        self.configure()
 
     def __init__(self, cfgname = default_cfgname, args = sys.argv):
-        self.configuration = {}
+        self.configuration = {'name': 'PCM'}
         self.state = {}
         self.cfgname = cfgname
         signal(SIGHUP, self.handle_sighup)
@@ -46,7 +46,7 @@ class PCM:
         self.logger.log_time = True
         self.logger.setLogfile('&2')
         self.cmdline = Cmdline.Cmdline(args)
-        self.Configure()
+        self.configure()
         self.logger.setLogLevel(int(self.configuration['log_level']))
         self.setInitialFiles()
     def setInitialFiles(self):
@@ -56,8 +56,9 @@ class PCM:
             with open(self.configuration['host_dir']+'/localhost.in', 'w') as f:
                 f.write("IP_ADDRESS = '127.0.0.1'\n")
 
-    def Configure(self):
+    def configure(self):
         """Reload the configuration."""
+        self.configuration['cfgfile'] = self.cfgname
         try:
             with open(self.cfgname) as f:
                 for l in f:
@@ -69,7 +70,8 @@ class PCM:
                     except IndexError: continue # empty line
             try: self.logger.setLogfile(self.configuration['log_filename'])
             except KeyError: self.logger.setLogfile('./pcm.log')
-            return True
+            self.logger.log('Configuration reloaded for '+self.configuration['name']+'.', 1)
+            return self.configuration
         except Exception as e:
             self.logger.log(' *** Configuration error! − '+str(e)+' ***', 4)
             return False

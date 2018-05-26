@@ -4,10 +4,11 @@
 import sys
 try:
     from random import randint
+    from re import split as resplit
     from time import time, sleep
     from pickle import dumps, loads
     from os import getpid, kill, unlink, path
-    from signal import SIGTERM
+    from signal import SIGTERM, SIGHUP
     from psutil import process_iter, Process
 except ImportError as e:
     print(str(e), file=sys.stderr)
@@ -24,6 +25,7 @@ class Daemon:
   
     def set_initial_state(self):
         self.state['name'] = self.name
+        self.configuration['name'] = self.name
         self.state['startTime'] = time()
         self.state['uptime'] = 0
         self.state['startReportTime'] = time()
@@ -92,4 +94,5 @@ class Daemon:
         if self.state['reportTime'] >= int(self.configuration['report_time']):
             self.logger.log(self.state['name']+' OK, uptime is {}.'.format(str(int(self.state['uptime']))))
             self.state['startReportTime'] = time()
+
 

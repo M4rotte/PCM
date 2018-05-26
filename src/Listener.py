@@ -4,7 +4,10 @@
 import sys
 import asyncio
 from os import getpid, _exit
-from signal import signal, SIGUSR1
+from signal import signal, SIGUSR1, SIGHUP
+from psutil import Process
+from time import time
+from datetime import timedelta
 import Daemon
 
 class Listener(Daemon.Daemon):
@@ -24,6 +27,7 @@ class Listener(Daemon.Daemon):
             message = 'Listening on {}. PID={}'.format(self.server.sockets[0].getsockname(),getpid())
             print(message, file=sys.stderr)
             self.logger.log(message, 1)
+            self.configuration['name'] = 'Listener'
             self.loop.run_forever()
         except OSError as err:
             print(str(err), file=sys.stderr)
@@ -36,7 +40,11 @@ class Listener(Daemon.Daemon):
 
     def process_request(self,request):
 
-        return request
+        if request.strip() == 'uptime':
+            seconds = int(time() - Process(getpid()).create_time())
+            response = str(timedelta(seconds=seconds))
+        else: response = ''
+        return response
 
     @asyncio.coroutine
     def handle_request(self, reader, writer):
@@ -44,9 +52,9 @@ class Listener(Daemon.Daemon):
         message = data.decode()
         addr = writer.get_extra_info('peername')
         self.logger.log("Received %r from %r" % (message, addr),0)
-        response = self.process_request(message)
+        response = self.process_request(message)+'\n'
         self.logger.log("Send: %r to %r" % (response, addr), 0)
-        writer.write(data)
+        writer.write(response.encode('utf-8'))
         yield from writer.drain()
         writer.close()
 
