@@ -10,45 +10,15 @@ from signal import signal, SIGTERM, SIGUSR1
 from time import sleep, time
 from pickle import dumps,loads
 from psutil import process_iter, Process
+import Daemon
 
 import PCM
 
-class Listener:
+class Listener(Daemon.Daemon):
 
-    def __init__(self, configuration, logger):
+    def __init__(self, configuration, logger = None, name = 'Listener'):
     
-        self.logger = logger
-        self.state = {}
-        self.configuration = configuration
-        self.set_initial_state(self.configuration)
-
-    def set_initial_state(self, configuration):
-
-        self.state['name'] = 'listener'
-        self.state['startTime'] = int(time())
-        self.state['filename'] = configuration['pcm_dir']+'/listener.state'
-
-    def process_exists(self):
-                
-        cmdline = [path.basename(sys.executable),sys.argv[0],'listener']
-        for p in process_iter():
-            if p.cmdline() == cmdline: return p.pid
-        return False
-
-    def load_state(self):
-        
-        try:
-            with open(self.state['filename'], 'rb') as f:
-                self.state = loads(f.read())
-        except FileNotFoundError: self.set_initial_state(self.configuration)
-        except (Exception) as e: print(str(e))
-
-    def save_state(self):
-
-        try:
-            with open(self.state['filename'], 'wb') as f:
-                f.write(dumps(self.state))
-        except (Exception) as e: print(str(e))
+        super().__init__(configuration, logger, 'Listener')
 
     def start(self):
 
@@ -69,31 +39,6 @@ class Listener:
         except OSError as err:
             print(str(err), file=sys.stderr)
 
-    def stop(self):
-        
-        pid = self.process_exists()
-        
-        if pid:
-            kill(pid,SIGTERM)
-            unlink(self.state['filename'])
-            print('Listener stopped.', file=sys.stderr)
-            self.logger.log('Listener PID='+str(pid)+' stopped.', 1)
-            return True
-        else:
-            print('Listener is not running.', file=sys.stderr)
-            return False
- 
-    def status(self):
-        
-        pid = self.process_exists()
-        
-        if pid:
-            uptime = time() - Process(pid).create_time()
-            print('Listener is running. PID={} Uptime={}'.format(str(pid), str(int(uptime))), file=sys.stderr)
-            return True
-        else:
-            print('Listener is not running.', file=sys.stderr)
-            return False
         
     def close_server(self, signum, frame):
         self.logger.log('Server PID='+str(getpid())+' received signal '+str(signum)+' ('+str(frame)+'). Stopping…', 1)
