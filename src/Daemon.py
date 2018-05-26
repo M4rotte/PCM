@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# pylint: disable=bad-whitespace,bad-continuation,line-too-long,multiple-statements,trailing-whitespace,trailing-newlines,invalid-name,trailing-whitespace
 # -*- coding: UTF-8 -*-
 """PCM Daemon class."""
 import sys
@@ -6,8 +6,8 @@ try:
     from random import randint
     from time import time, sleep
     from pickle import dumps, loads
-    from os import getpid, kill, unlink, _exit, path
-    from signal import signal, SIGTERM, SIGHUP
+    from os import getpid, kill, unlink, path
+    from signal import SIGTERM
     from psutil import process_iter, Process
 except ImportError as e:
     print(str(e), file=sys.stderr)
@@ -29,8 +29,7 @@ class Daemon:
         self.state['filename'] = configuration['pcm_dir']+'/'+self.state['name'].lower()+'.state'
 
     def lucky(self, chance):
-        if randint(1, chance) == 1: return True
-        else: return False
+        return randint(1, chance) == 1
 
     def process_exists(self):
         """Return True if the process is found in the processes table."""
@@ -67,9 +66,8 @@ class Daemon:
             print(self.state['name']+' stopped.', file=sys.stderr)
             self.logger.log(self.state['name']+' PID='+str(pid)+' stopped.', 1)
             return True
-        else:
-            print(self.state['name']+' not running.', file=sys.stderr)
-            return False
+        print(self.state['name']+' not running.', file=sys.stderr)
+        return False
 
     def status(self):
         """Check if the daemon is running."""
@@ -78,20 +76,19 @@ class Daemon:
             uptime = time() - Process(pid).create_time()
             print(self.state['name']+' is running. PID={} Uptime={}'.format(str(pid),str(int(uptime))), file=sys.stderr)
             return True
-        else:
-            print(self.state['name']+' not running.', file=sys.stderr)
-            return False
+        print(self.state['name']+' not running.', file=sys.stderr)
+        return False
 
     def run(self):
         """Daemon main loop."""
         while True:
             self.load_state()
-            self.state['uptime'] = Process(getpid()).create_time() - time()
+            self.state['uptime'] = time() - Process(getpid()).create_time()
             self.process()
             self.save_state()
             sleep(1)
 
     def process(self):
         
-        if self.lucky(10): self.logger.log(self.state['name']+' OK, uptime is {}.'.format(self.state['uptime']))
+        if self.lucky(10): self.logger.log(self.state['name']+' OK, uptime is {}.'.format(str(int(self.state['uptime']))))
 

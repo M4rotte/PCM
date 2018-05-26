@@ -1,13 +1,11 @@
-# pylint: disable=bad-whitespace,bad-continuation,line-too-long,multiple-statements,trailing-whitespace,trailing-newlines
+# pylint: disable=bad-whitespace,bad-continuation,line-too-long,multiple-statements,trailing-whitespace,trailing-newlines,invalid-name,trailing-whitespace
+# -*- coding: UTF-8 -*-
 """PCM Listener."""
 import sys
 import asyncio
-from os import getpid, kill, unlink, _exit, path
-from signal import signal, SIGTERM, SIGUSR1
-from time import sleep, time
-from pickle import dumps,loads
-from psutil import process_iter, Process
-import PCM, Daemon
+from os import getpid, _exit
+from signal import signal, SIGUSR1
+import Daemon
 
 class Listener(Daemon.Daemon):
     def __init__(self, configuration, logger = None, name = 'Listener'):

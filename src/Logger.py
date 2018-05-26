@@ -1,4 +1,5 @@
-# pylint: disable=bad-whitespace,bad-continuation,line-too-long,multiple-statements,trailing-whitespace,trailing-newlines
+# pylint: disable=bad-whitespace,bad-continuation,line-too-long,multiple-statements,trailing-whitespace,trailing-newlines,invalid-name,trailing-whitespace
+# -*- coding: UTF-8 -*-
 """PCM Logger"""
 import sys
 from time import strftime

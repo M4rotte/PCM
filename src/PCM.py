@@ -1,14 +1,13 @@
-# pylint: disable=bad-whitespace,bad-continuation,line-too-long,multiple-statements,trailing-whitespace,trailing-newlines
+# pylint: disable=bad-whitespace,bad-continuation,line-too-long,multiple-statements,trailing-whitespace,trailing-newlines,invalid-name,trailing-whitespace
+# -*- coding: UTF-8 -*-
 """PCM class."""
 import sys
 try:
-    from time            import sleep, time
-    from multiprocessing import Process, Queue
-    from signal          import signal, SIGTERM, SIGHUP
+    from signal          import signal, SIGHUP
     from re              import split as resplit 
-    from os              import _exit, getpid, kill, unlink, mkdir
+    from os              import mkdir
     from os.path         import isfile, isdir
-    from pickle          import dumps, loads
+    from DataStructures  import OrderedSet
     import Logger, Cmdline
 except ImportError as e:
     print(str(e), file=sys.stderr)
@@ -33,7 +32,9 @@ def str2bool(v, true=("yes", "true", "1")):
 class PCM:
     """PCM class."""
     default_cfgname = './pcm.cfg'
-    def handle_sighup(self, signum, frame): self.Configure()
+    def handle_sighup(self, signum, frame):
+        """Reload configuration when a SIGHUP is received."""
+        self.Configure()
 
     def __init__(self, cfgname = default_cfgname, args = sys.argv):
         self.configuration = {}
