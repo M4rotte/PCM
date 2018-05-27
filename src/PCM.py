@@ -52,9 +52,6 @@ class PCM:
     def setInitialFiles(self):
         """Create the files needed by PCM if they don’t already exist."""
         if not isdir(self.configuration['host_dir']): mkdir(self.configuration['host_dir'])
-        if not isfile(self.configuration['host_dir']+'/localhost.in') and not isfile(self.configuration['host_dir']+'/localhost.in.disable'):
-            with open(self.configuration['host_dir']+'/localhost.in', 'w') as f:
-                f.write("IP_ADDRESS = '127.0.0.1'\n")
 
     def configure(self):
         """Reload the configuration."""

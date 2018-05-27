@@ -114,7 +114,7 @@ class SSHClient:
 
             end = time()
             self.logger.log('['+user+'@'+host+'] `'+cmdline+'` '+str(error),3)
-            q.put((user, host, cmdline, -1, [], [], str(error), start, end))
+            q.put((user, host, cmdline, -2, [], [], str(error), start, end))
             self.client.close()
             return False  
 
@@ -131,6 +131,7 @@ class SSHClient:
         q = Queue()
         runs = []
         processes = []
+        if cmdline is '': return []
         try: chunk_size = int(self.configuration['host_chunk_size'])
         except KeyError: chunk_size = 4
         self.logger.log('Executing `'+cmdline+'` on '+str(len(hosts))+' hosts in chunks of '+str(chunk_size)+' hosts.',0)

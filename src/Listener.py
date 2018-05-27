@@ -11,6 +11,10 @@ from datetime import timedelta
 import Daemon
 
 class Listener(Daemon.Daemon):
+    """The Listener object subclasses Daemon, but unlike other classes which subclass it, 
+        it even overrides its start() method, thus making it behave differently:
+        The process() method is never called, so except of handling requests, the corresponding 
+        process do nothing else. The report() method can’t be called either."""
     def __init__(self, configuration, logger = None, name = 'Listener'):
         super().__init__(configuration, logger, 'Listener')
 
@@ -32,6 +36,10 @@ class Listener(Daemon.Daemon):
         except OSError as err:
             print(str(err), file=sys.stderr)
 
+    # Due to how start() is overridden, the following can’t be used:
+    def process(): pass
+    def report(): pass
+
     def close_server(self, signum, frame):
         self.logger.log('Server PID='+str(getpid())+' received signal '+str(signum)+' ('+str(frame)+'). Stopping…', 1)
         self.loop.stop()
@@ -39,7 +47,6 @@ class Listener(Daemon.Daemon):
         _exit(0)
 
     def process_request(self,request):
-
         if request.strip() == 'uptime':
             seconds = int(time() - Process(getpid()).create_time())
             response = str(timedelta(seconds=seconds))

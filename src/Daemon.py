@@ -65,7 +65,7 @@ class Daemon:
             kill(pid,SIGTERM)
             try:
                 unlink(self.state['filename'])
-                self.logger.log('File "'+self.state['filename']+'" deleted.', 0)
+                self.logger.log('File "'+self.state['filename'].replace('//','/')+'" deleted.', 0)
             except FileNotFoundError as err: print(str(err), file=sys.stderr)
             print(self.state['name']+' stopped.', file=sys.stderr)
             self.logger.log(self.state['name']+' PID='+str(pid)+' stopped.', 1)
@@ -88,15 +88,21 @@ class Daemon:
         while True:
             self.load_state()
             self.state['uptime'] = time() - Process(getpid()).create_time()
-            self.state['reportTime'] = time() - self.state['startReportTime']
             self.process()
             self.save_state()
             sleep(5)
 
-    def process(self):
-        """Daemon main procedure."""
-        if self.state['reportTime'] >= int(self.configuration['report_time']):
-            self.logger.log(self.state['name']+' OK, uptime is {}.'.format(str(int(self.state['uptime']))))
+    def report(self, every = None):
+        """The daemon will report to log that he’s doing fine. The function may be call anytime, 
+            it only writes to log at a fixed period of `every` seconds."""
+        if not every: every = self.configuration['report_time']
+        self.state['reportTime'] = time() - self.state['startReportTime']
+        if self.state['reportTime'] >= int(every):
+            self.logger.log(self.state['name']+' OK, uptime is {} (report every {}).'.format(str(int(self.state['uptime'])),every))
             self.state['startReportTime'] = time()
+
+    def process(self):
+        """Daemon main procedure. To be overridden."""
+        self.report()
 
 
