@@ -20,11 +20,6 @@ except ImportError as e:
     print('Cannot find the module(s) listed above. Exiting.', file=sys.stderr)
     sys.exit(1)
 
-def handleSignal(signum, frame):
-    
-    if signum == SIGALRM: raise WithdrawException('Execution left unsupervised')
-    else: raise Exception('Signal: '+str(signum)+' at: '+str(frame))
-
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n): yield l[i:i + n]
@@ -47,6 +42,11 @@ class SSHClient:
         self.client = paramiko.SSHClient()
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.client.load_system_host_keys()
+
+    def handleSignal(self, signum, frame):
+        
+        if signum == SIGALRM: raise WithdrawException('Execution left unsupervised after {} seconds.'.format(self.configuration['exec_timeout']))
+        else: raise Exception('Signal: '+str(signum)+' at: '+str(frame))
 
     def newkey(self):
         """Generate a RSA key."""
@@ -91,7 +91,7 @@ class SSHClient:
                                 banner_timeout=float(self.configuration['banner_timeout']), auth_timeout=float(self.configuration['auth_timeout']))
             std    = self.client.exec_command(cmdline, timeout=float(self.configuration['exec_timeout']))
             signal.alarm(int(self.configuration['exec_timeout']))
-            signal.signal(signal.SIGALRM, handleSignal)
+            signal.signal(signal.SIGALRM, self.handleSignal)
             return_code = std[1].channel.recv_exit_status()
             stdout = list(std[1])
             stderr = list(std[2])
