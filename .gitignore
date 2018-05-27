@@ -1,8 +1,7 @@
 __pycache__/
-pcm.pid
 pcm.log
 *.state
-*.pid
 pcm_key
 pcm_key.pub
 hosts/
+scripts/

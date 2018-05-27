@@ -8,7 +8,7 @@ try:
     from cryptography.hazmat.backends import default_backend as crypto_default_backend
     from os import walk as walkdir
     from os import path
-    from time import time
+    from time import time, sleep
     import re
 
 except ImportError as e:
@@ -41,18 +41,42 @@ class Engine(Daemon.Daemon):
                 if test_re.match(name): ok_files.append(name)
         return ok_files
 
-    def process(self):
-        """Engine main procedure."""
+    def execOnHosts(self, cmdline):
+
         hosts = []
         for f in self.findFile(self.configuration['host_dir'],r'.*\.in$'):
             basef = path.basename(f)
             hosts.append(''.join(basef.split('.')[:-1]))
         if len(hosts) > 0:
             self.state['hosts'] = hosts
-            res = self.SSHClient.execute('uname -a', hosts)
-            for h in res: print(h)
+            return self.SSHClient.execute(cmdline, hosts)
         else:
             self.logger.log('Host directory "'+self.configuration['host_dir']+'" has no host input files (*.in), nothing to do!', 1)
+            return False
+
+    def checkHost(self, hostname):
         
+        self.genScripts(hostname)
+
+    def genScripts(self, hostname):
+
+        try:
+            with open(self.configuration['host_dir']+'/'+hostname+'.in', 'r') as hf:
+                for line in hf:
+                    line = line.strip()
+                    if not line: continue
+                    outfilename = self.configuration['script_dir']+'/'+hostname+'_'+line+'.sh'
+                    self.logger.log('Generating script "{}" for host "{}" in "{}"'.format(line,hostname,outfilename), 0)
+                    with open(outfilename,'w') as f:
+                        infilename = self.configuration['script_dir']+'/'+line
+                        f.write('#!/bin/sh\n')
+                        exec(open(infilename).read())
+        except Exception as e: print(str(e))
+
+    def process(self):
+        """Engine main procedure."""
+        print(self.execOnHosts('ls'))
+        self.checkHost('opium')
         self.report()
+        sleep(10)
 

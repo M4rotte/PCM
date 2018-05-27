@@ -79,7 +79,7 @@ class Daemon:
         pid = self.process_exists()
         if pid:
             uptime = time() - Process(pid).create_time()
-            print(self.state['name']+' is running. PID={} Uptime={}'.format(str(pid),str(timedelta(seconds=uptime))), file=sys.stderr)
+            print(self.state['name']+' is running. PID={} Uptime={}'.format(str(pid),str(timedelta(seconds=int(uptime)))), file=sys.stderr)
             return True
         print(self.state['name']+' not running.', file=sys.stderr)
         return False
@@ -98,7 +98,7 @@ class Daemon:
             self.state['uptime'] = time() - Process(getpid()).create_time()
             self.process()
             self.save_state()
-            sleep(5)
+            sleep(1)
 
     def report(self, every = None):
         """The daemon will report to log that he’s doing fine. The function may be call anytime, 
