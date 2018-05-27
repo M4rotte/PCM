@@ -10,6 +10,7 @@ try:
     from os import getpid, kill, unlink, path
     from signal import SIGTERM, SIGHUP
     from psutil import process_iter, Process
+    from datetime import timedelta
 except ImportError as e:
     print(str(e), file=sys.stderr)
     print('Cannot find the module(s) listed above. Exiting.', file=sys.stderr)
@@ -78,7 +79,7 @@ class Daemon:
         pid = self.process_exists()
         if pid:
             uptime = time() - Process(pid).create_time()
-            print(self.state['name']+' is running. PID={} Uptime={}'.format(str(pid),str(int(uptime))), file=sys.stderr)
+            print(self.state['name']+' is running. PID={} Uptime={}'.format(str(pid),str(timedelta(seconds=uptime))), file=sys.stderr)
             return True
         print(self.state['name']+' not running.', file=sys.stderr)
         return False
@@ -95,10 +96,10 @@ class Daemon:
     def report(self, every = None):
         """The daemon will report to log that he’s doing fine. The function may be call anytime, 
             it only writes to log at a fixed period of `every` seconds."""
-        if not every: every = self.configuration['report_time']
+        if not every: every = int(self.configuration['report_time'])
         self.state['reportTime'] = time() - self.state['startReportTime']
         if self.state['reportTime'] >= int(every):
-            self.logger.log(self.state['name']+' OK, uptime is {} (report every {}).'.format(str(int(self.state['uptime'])),every))
+            self.logger.log(self.state['name']+' OK, uptime is {} (report every {}).'.format(str(timedelta(seconds=int(self.state['uptime']))),str(timedelta(seconds=every))))
             self.state['startReportTime'] = time()
 
     def process(self):

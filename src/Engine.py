@@ -49,7 +49,7 @@ class Engine(Daemon.Daemon):
             hosts.append(''.join(basef.split('.')[:-1]))
         if len(hosts) > 0:
             self.state['hosts'] = hosts
-            res = self.SSHClient.execute('', hosts)
+            res = self.SSHClient.execute('uname -a', hosts)
             for h in res: print(h)
         else:
             self.logger.log('Host directory "'+self.configuration['host_dir']+'" has no host input files (*.in), nothing to do!', 1)
