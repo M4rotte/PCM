@@ -39,15 +39,16 @@ class Engine(Daemon.Daemon):
             for f in files:
                 name = root+'/'+f
                 if test_re.match(name): ok_files.append(name)
-        return(ok_files)
+        return ok_files
 
     def process(self):
         """Engine main procedure."""
         hosts = []
-        for f in self.findFile(self.configuration['host_dir'],r'.*\.in'):
+        for f in self.findFile(self.configuration['host_dir'],r'.*\.in$'):
+            print('File found: '+str(f))
             basef = path.basename(f)
             hosts.append(''.join(basef.split('.')[:-1]))
-        res = self.SSHClient.execute('uname -a',hosts)
+        res = self.SSHClient.execute('sleep 60',hosts)
         for h in res: print(h)
         if self.state['reportTime'] >= int(self.configuration['report_time']):
             self.logger.log(self.state['name']+' OK, uptime is {}.'.format(str(int(self.state['uptime']))))

@@ -55,6 +55,7 @@ class Daemon:
 
     def start(self):
         print(self.state['name']+' starts. PID={}'.format(str(getpid())), file=sys.stderr)
+        self.save_state()
         self.logger.log(self.state['name']+' starts. PID={}'.format(str(getpid())), 1)
 
     def stop(self):
@@ -62,7 +63,8 @@ class Daemon:
         pid = self.process_exists()
         if pid:
             kill(pid,SIGTERM)
-            unlink(self.state['filename'])
+            try: unlink(self.state['filename'])
+            except FileNotFoundError as err: print(str(err), file=sys.stderr)
             print(self.state['name']+' stopped.', file=sys.stderr)
             self.logger.log(self.state['name']+' PID='+str(pid)+' stopped.', 1)
             return True
@@ -85,9 +87,9 @@ class Daemon:
             self.load_state()
             self.state['uptime'] = time() - Process(getpid()).create_time()
             self.state['reportTime'] = time() - self.state['startReportTime']
-            self.process()
+            pp = self.process()
             self.save_state()
-            sleep(1)
+            sleep(5)
 
     def process(self):
         """Daemon main procedure."""
