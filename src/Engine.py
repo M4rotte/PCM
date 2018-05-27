@@ -10,6 +10,7 @@ try:
     from os import path
     from time import time, sleep
     import re
+    from hashlib import blake2b
 
 except ImportError as e:
     print(str(e), file=sys.stderr)
@@ -54,6 +55,29 @@ class Engine(Daemon.Daemon):
             self.logger.log('Host directory "'+self.configuration['host_dir']+'" has no host input files (*.in), nothing to do!', 1)
             return False
 
+    def scriptKnownHash(self, hostname, scriptname):
+        
+        try:
+            return self.state['hash_'+hostname+'_'+scriptname]
+        except KeyError:
+            blakesum = blake2b()
+            blakesum.update(open(self.configuration['script_dir']+'/'+scriptname,'rb').read())
+            self.state['hash_'+hostname+'_'+scriptname] = blakesum.hexdigest()
+            return False
+    
+    def scriptCurrentHash(self, hostname, scriptname):
+        
+        try:
+            blakesum = blake2b()
+            blakesum.update(open(self.configuration['script_dir']+'/'+scriptname,'rb').read())
+            return blakesum.hexdigest()
+        except FileNotFoundError:
+            return False
+       
+    def scriptChangedOrNew(self, hostname, scriptname):
+        
+        return self.scriptKnownHash(hostname, scriptname) != self.scriptCurrentHash(hostname, scriptname)
+       
     def checkHost(self, hostname):
         
         self.genScripts(hostname)
@@ -65,6 +89,9 @@ class Engine(Daemon.Daemon):
                 for line in hf:
                     line = line.strip()
                     if not line: continue
+                    if not self.scriptChangedOrNew(hostname, line):
+                        self.logger.log('Script "{}" for host "{}" unchanged.'.format(line, hostname), 0)
+                        continue
                     outfilename = self.configuration['script_dir']+'/'+hostname+'_'+line+'.sh'
                     self.logger.log('Generating script "{}" for host "{}" in "{}"'.format(line,hostname,outfilename), 0)
                     with open(outfilename,'w') as f:
