@@ -56,7 +56,7 @@ class Daemon:
 
     def start(self):
         print(self.state['name']+' starts. PID={}'.format(str(getpid())), file=sys.stderr)
-        self.save_state()
+        self.load_state()
         self.logger.log(self.state['name']+' starts. PID={}'.format(str(getpid())), 1)
 
     def stop(self):
@@ -65,7 +65,6 @@ class Daemon:
         if pid:
             kill(pid,SIGTERM)
             try:
-                unlink(self.state['filename'])
                 self.logger.log('File "'+self.state['filename'].replace('//','/')+'" deleted.', 0)
             except FileNotFoundError as err: print(str(err), file=sys.stderr)
             print(self.state['name']+' stopped.', file=sys.stderr)
