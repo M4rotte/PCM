@@ -56,7 +56,7 @@ class Engine(Daemon.Daemon):
             return False
 
     def scriptKnownHash(self, hostname, scriptname):
-        
+        """Return known hash if any, else add known hash and return False."""
         try:
             return self.state['hash_'+hostname+'_'+scriptname]
         except KeyError:
@@ -66,16 +66,17 @@ class Engine(Daemon.Daemon):
             return False
     
     def scriptCurrentHash(self, hostname, scriptname):
-        
+        """Update known hash."""
         try:
             blakesum = blake2b()
             blakesum.update(open(self.configuration['script_dir']+'/'+scriptname,'rb').read())
+            self.state['hash_'+hostname+'_'+scriptname] = blakesum.hexdigest()
             return blakesum.hexdigest()
         except FileNotFoundError:
             return False
        
     def scriptChangedOrNew(self, hostname, scriptname):
-        
+        """Return True if script has changed or is new."""
         return self.scriptKnownHash(hostname, scriptname) != self.scriptCurrentHash(hostname, scriptname)
        
     def checkHost(self, hostname):
