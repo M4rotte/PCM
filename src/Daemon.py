@@ -63,7 +63,9 @@ class Daemon:
         pid = self.process_exists()
         if pid:
             kill(pid,SIGTERM)
-            try: unlink(self.state['filename'])
+            try:
+                unlink(self.state['filename'])
+                self.logger.log('File "'+self.state['filename']+'" deleted.', 0)
             except FileNotFoundError as err: print(str(err), file=sys.stderr)
             print(self.state['name']+' stopped.', file=sys.stderr)
             self.logger.log(self.state['name']+' PID='+str(pid)+' stopped.', 1)
@@ -87,7 +89,7 @@ class Daemon:
             self.load_state()
             self.state['uptime'] = time() - Process(getpid()).create_time()
             self.state['reportTime'] = time() - self.state['startReportTime']
-            pp = self.process()
+            self.process()
             self.save_state()
             sleep(5)
 

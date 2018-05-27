@@ -81,22 +81,23 @@ class SSHClient:
         h.update(self.pubkey())
         return h.hexdigest()
 
-    def _execute(self, host, cmdline, q):
+    def _execute(self, user, host, cmdline, q):
         """Execute a command on a host and put the result in a queue."""
         start  = time()
         try:
             exec_status = ''
             return_code = 0
-            self.client.connect(host, username=self.configuration['pcm_user'], pkey=self.sshkey(), timeout=float(self.configuration['client_timeout']),
+            self.client.connect(host, username=user, pkey=self.sshkey(), timeout=float(self.configuration['client_timeout']),
                                 banner_timeout=float(self.configuration['banner_timeout']), auth_timeout=float(self.configuration['auth_timeout']))
             std    = self.client.exec_command(cmdline, timeout=float(self.configuration['exec_timeout']))
             signal.alarm(int(self.configuration['exec_timeout']))
             signal.signal(signal.SIGALRM, self.handleSignal)
+            self.logger.log(user+'@'+host+'> '+cmdline, 0)
             return_code = std[1].channel.recv_exit_status()
             stdout = list(std[1])
             stderr = list(std[2])
             end    = time()
-            q.put((self.configuration['pcm_user'], host, cmdline, return_code, stdout, stderr, exec_status, start, end))
+            q.put((user, host, cmdline, return_code, stdout, stderr, exec_status, start, end))
             self.client.close()
 
         except (paramiko.ssh_exception.AuthenticationException,
@@ -104,20 +105,26 @@ class SSHClient:
                 paramiko.ssh_exception.SSHException,
                 timeout,OSError,EOFError,ConnectionResetError,AttributeError) as error:
             end = time()
-            self.logger.log(str(error),3)
-            q.put((self.configuration['pcm_user'], host, cmdline, -1, [], [], str(error), start, end))
+            self.logger.log('['+user+'@'+host+'] `'+cmdline+'` '+str(error),3)
+            q.put((user , host, cmdline, -1, [], [], str(error), start, end))
             self.client.close()
             return False
             
         except WithdrawException as error:
 
             end = time()
-            self.logger.log(str(error),3)
-            q.put((self.configuration['pcm_user'], host, cmdline, -1, [], [], str(error), start, end))
+            self.logger.log('['+user+'@'+host+'] `'+cmdline+'` '+str(error),3)
+            q.put((user, host, cmdline, -1, [], [], str(error), start, end))
             self.client.close()
             return False  
 
         return True
+
+    def hostUser(self,hostname):
+        """Return the user found in the .user file if it exists, default PCM user else."""
+        try:
+            with open(self.configuration['host_dir']+'/'+hostname+'.user','r') as f: return f.read().strip()
+        except FileNotFoundError: return self.configuration['pcm_user']
 
     def execute(self, cmdline, hosts):
         """Execute a command on hosts in parallel."""
@@ -127,14 +134,17 @@ class SSHClient:
         try: chunk_size = int(self.configuration['host_chunk_size'])
         except KeyError: chunk_size = 4
         self.logger.log('Executing `'+cmdline+'` on '+str(len(hosts))+' hosts in chunks of '+str(chunk_size)+' hosts.',0)
+        chunk_k = 1
         for chunk in chunks(hosts, chunk_size):
             nb_hosts = len(chunk)
+            self.logger.log('Chunk #'+str(chunk_k)+': '+','.join(chunk),0)
             for host in chunk:
-                proc = Process(target=self._execute, args=(host, cmdline, q))
+                proc = Process(target=self._execute, args=(self.hostUser(host), host, cmdline, q))
                 proc.start()
                 processes.append(proc)
             for p in processes: p.join()
             for _ in range(0, nb_hosts):
                 runs.append(q.get())
+            chunk_k += 1
 
         return runs
