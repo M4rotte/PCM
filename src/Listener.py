@@ -50,6 +50,8 @@ class Listener(Daemon.Daemon):
         if request.strip() == 'uptime':
             seconds = int(time() - Process(getpid()).create_time())
             response = str(timedelta(seconds=seconds))
+        elif request.strip() == 'config':
+            response = self.config()
         else: response = ''
         return response
 

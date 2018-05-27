@@ -84,6 +84,13 @@ class Daemon:
         print(self.state['name']+' not running.', file=sys.stderr)
         return False
 
+    def config(self):
+        """Get configuration as string."""
+        r = []
+        for k,v in self.configuration.items():
+            r.append(k+': '+v)
+        return '\n'.join(r)
+
     def run(self):
         """Daemon main loop."""
         while True:
