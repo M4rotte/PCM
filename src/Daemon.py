@@ -32,6 +32,9 @@ class Daemon:
         self.state['startReportTime'] = time()
         self.state['filename'] = self.configuration['pcm_dir']+'/'+self.state['name'].lower()+'.state'
 
+    def __str__(self):
+        return self.name
+
     def process_exists(self):
         """Return True if the process is found in the processes table."""
         cmdline = [path.basename(sys.executable),sys.argv[0],self.state['name'].lower()]
@@ -105,7 +108,8 @@ class Daemon:
         if not every: every = int(self.configuration['report_time'])
         self.state['reportTime'] = time() - self.state['startReportTime']
         if self.state['reportTime'] >= int(every):
-            self.logger.log(self.state['name']+' OK, uptime is {} (report every {}).'.format(str(timedelta(seconds=int(self.state['uptime']))),str(timedelta(seconds=every))))
+            self.logger.log(self.state['name']+' OK, uptime is {} (report every {}).'.format(str(timedelta(seconds=int(self.state['uptime']))),
+                                                                                             str(timedelta(seconds=every))))
             self.state['startReportTime'] = time()
 
     def process(self):

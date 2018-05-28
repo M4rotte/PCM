@@ -43,6 +43,9 @@ class SSHClient:
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.client.load_system_host_keys()
 
+    def __str__(self):
+        return 'SSH'
+
     def handleSignal(self, signum, frame):
         
         if signum == SIGALRM: raise WithdrawException('Execution left unsupervised after {} seconds.'.format(self.configuration['exec_timeout']))

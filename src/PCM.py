@@ -53,6 +53,9 @@ class PCM:
         """Create the files needed by PCM if they don’t already exist."""
         if not isdir(self.configuration['host_dir']): mkdir(self.configuration['host_dir'])
 
+    def __str__(self):
+        return self.configuration['name']
+
     def configure(self):
         """Reload the configuration."""
         self.configuration['cfgfile'] = self.cfgname
