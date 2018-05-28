@@ -126,7 +126,7 @@ class SSHClient:
     def hostUser(self,hostname):
         """Return the user found in the .user file if it exists, default PCM user else."""
         try:
-            with open(self.configuration['host_dir']+'/'+hostname+'.user','r') as f: return f.read().strip()
+            with open(self.configuration['host_dir']+'/'+hostname+'/user','r') as f: return f.read().strip()
         except FileNotFoundError: return self.configuration['pcm_user']
 
     def execute(self, cmdline, hosts):

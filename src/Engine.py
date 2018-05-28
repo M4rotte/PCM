@@ -8,8 +8,7 @@ try:
     from cryptography.hazmat.backends import default_backend as crypto_default_backend
     from os import walk as walkdir
     from os import path
-    from time import time, sleep
-    import re
+    from time import time, sleep, strftime
     from hashlib import blake2b
 
 except ImportError as e:
@@ -33,78 +32,64 @@ class Engine(Daemon.Daemon):
                 return load_pem_private_key(data,backend=crypto_default_backend(),password=None)
         except (ValueError,FileNotFoundError,EOFError): return None
 
-    def findFile(self, directory, regex = '.*'):
-        test_re = re.compile(regex)
-        ok_files = []
-        for root, dirs, files in walkdir(self.configuration['host_dir']):
-            for f in files:
-                name = root+'/'+f
-                if test_re.match(name): ok_files.append(name)
-        return ok_files
+    def getHosts(self): return next(walkdir(self.configuration['host_dir']))[1]
 
     def execOnHosts(self, cmdline):
 
-        hosts = []
-        for f in self.findFile(self.configuration['host_dir'],r'.*\.in$'):
-            basef = path.basename(f)
-            hosts.append(''.join(basef.split('.')[:-1]))
+        hosts = self.getHosts()
         if len(hosts) > 0:
             self.state['hosts'] = hosts
             return self.SSHClient.execute(cmdline, hosts)
         else:
-            self.logger.log('Host directory "'+self.configuration['host_dir']+'" has no host input files (*.in), nothing to do!', 1)
+            self.logger.log('No host defined in "'+self.configuration['host_dir']+'"', 1)
             return False
 
-    def scriptKnownHash(self, hostname, scriptname):
-        """Return known hash if any, else add known hash and return False."""
+    def scriptHash(self, scriptname):
+        """Compute the hash of the script."""
+        blakesum = blake2b()
+        blakesum.update(open(self.configuration['script_dir']+'/'+scriptname,'rb').read())
+        return blakesum.hexdigest()
+
+    def scriptDiffers(self, hostname, scriptname):
+        """Return True if the current script’s hash differs from the one saved in the state file for this host, and save this current hash."""
         try:
-            return self.state['hash_'+hostname+'_'+scriptname]
+            currenthash = self.scriptHash(scriptname)
+            knownhash = self.state['hash_'+hostname+'_'+scriptname]
+            self.state['hash_'+hostname+'_'+scriptname] = currenthash
+            return knownhash != currenthash
         except KeyError:
-            blakesum = blake2b()
-            blakesum.update(open(self.configuration['script_dir']+'/'+scriptname,'rb').read())
-            self.state['hash_'+hostname+'_'+scriptname] = blakesum.hexdigest()
-            return False
-    
-    def scriptCurrentHash(self, hostname, scriptname):
-        """Update known hash."""
-        try:
-            blakesum = blake2b()
-            blakesum.update(open(self.configuration['script_dir']+'/'+scriptname,'rb').read())
-            self.state['hash_'+hostname+'_'+scriptname] = blakesum.hexdigest()
-            return blakesum.hexdigest()
-        except FileNotFoundError:
-            return False
-       
-    def scriptChangedOrNew(self, hostname, scriptname):
-        """Return True if script has changed or is new."""
-        return self.scriptKnownHash(hostname, scriptname) != self.scriptCurrentHash(hostname, scriptname)
+            self.state['hash_'+hostname+'_'+scriptname] = currenthash
+            return True
+        return True
        
     def checkHost(self, hostname):
         
         self.genScripts(hostname)
 
     def genScripts(self, hostname):
-
+        """Generate the scripts for a given host."""
         try:
-            with open(self.configuration['host_dir']+'/'+hostname+'.in', 'r') as hf:
-                for line in hf:
+            with open(self.configuration['host_dir']+'/'+hostname+'/scripts', 'r') as script_file:
+                for line in script_file:
                     line = line.strip()
                     if not line: continue
-                    if not self.scriptChangedOrNew(hostname, line):
+                    if not self.scriptDiffers(hostname, line):
                         self.logger.log('Script "{}" for host "{}" unchanged.'.format(line, hostname), 0)
                         continue
-                    outfilename = self.configuration['script_dir']+'/'+hostname+'_'+line+'.sh'
+                    outfilename = self.configuration['host_dir']+'/'+hostname+'/'+line+'.sh'
                     self.logger.log('Generating script "{}" for host "{}" in "{}"'.format(line,hostname,outfilename), 0)
-                    with open(outfilename,'w') as f:
+                    with open(outfilename,'w') as output:
                         infilename = self.configuration['script_dir']+'/'+line
-                        f.write('#!/bin/sh\n')
+                        output.write('#!/bin/sh\n')
+                        output.write('# Script: {} | Host: {} | Time: {}\n\n'.format(line,hostname,strftime("%Y-%m-%d %H:%M:%S %Z")))
                         exec(open(infilename).read())
+        except FileNotFoundError: pass
         except Exception as e: print(str(e))
 
     def process(self):
         """Engine main procedure."""
         print(self.execOnHosts('ls'))
-        self.checkHost('opium')
+        for host in self.getHosts(): self.checkHost(host)
         self.report()
         sleep(10)
 
