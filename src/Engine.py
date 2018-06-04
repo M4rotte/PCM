@@ -10,6 +10,7 @@ try:
     from os import path
     from time import time, sleep, strftime
     from hashlib import blake2b
+    import re
 
 except ImportError as e:
     print(str(e), file=sys.stderr)
@@ -19,6 +20,7 @@ except ImportError as e:
 class Engine(Daemon.Daemon):
     def __init__(self, configuration, logger = None, name = 'Engine'):
         super().__init__(configuration, logger, 'Engine')
+        self.re_script = re.compile(r'^.*\.sh$')
     
     def createSSHClient(self):
         self.SSHClient = SSHClient.SSHClient(self.readKeyFile(self.configuration['rsa_key']), self.logger, self.configuration)
@@ -34,6 +36,15 @@ class Engine(Daemon.Daemon):
 
     def getHosts(self): return next(walkdir(self.configuration['host_dir']))[1]
 
+    def getScripts(self, hostname):
+        
+        scripts = []
+        for f in next(walkdir(self.configuration['host_dir']+'/'+hostname+'/'))[2]:
+            if self.re_script.match(f):
+                scripts.append('.'.join(f.split('.')[:-1]))
+        return scripts
+        
+
     def execOnHosts(self, cmdline):
 
         hosts = self.getHosts()
@@ -43,6 +54,13 @@ class Engine(Daemon.Daemon):
         else:
             self.logger.log('No host defined in "'+self.configuration['host_dir']+'"', 1)
             return False
+
+    def execScripts(self, user, hostname, scripts):
+
+        try:
+            return self.SSHClient.executeScripts(hostname, scripts)
+        except Exception as e:
+            print(str(e))
 
     def scriptHash(self, scriptname):
         """Compute the hash of the script."""
@@ -86,10 +104,16 @@ class Engine(Daemon.Daemon):
         except FileNotFoundError: pass
         except Exception as e: print(str(e))
 
+    def execHostScripts(self,hostname):
+
+        return self.execScripts('root', hostname, self.getScripts(hostname))
+
     def process(self):
         """Engine main procedure."""
-        print(self.execOnHosts('ls'))
-        for host in self.getHosts(): self.checkHost(host)
+        # ~ print(self.execOnHosts('ls'))
+        for host in self.getHosts():
+            self.checkHost(host)
+            print(self.execHostScripts(host))
         self.report()
         sleep(10)
 

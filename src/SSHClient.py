@@ -152,3 +152,35 @@ class SSHClient:
             chunk_k += 1
 
         return runs
+
+    def executeScripts(self, hostname, scripts):
+        """Copy and execute some shell scripts on a host."""
+        try:
+            executions = []
+            user = self.hostUser(hostname)
+            transport = paramiko.Transport((hostname, 22))
+            transport.connect(username=user, pkey=self.sshkey())
+            sftp = paramiko.SFTPClient.from_transport(transport)
+            for script in scripts:
+                localname = self.configuration['host_dir']+'/'+hostname+'/'+script+'.sh'
+                remotename = '/tmp/'+script+'.sh'
+                sftp.put(localname, remotename)
+                executions.append(self.execute('sh '+remotename, [hostname]))
+                sftp.remove(remotename)
+            sftp.close()
+            transport.close()
+            return executions
+
+        except (paramiko.ssh_exception.AuthenticationException,
+                paramiko.ssh_exception.NoValidConnectionsError,
+                paramiko.ssh_exception.SSHException,
+                timeout,OSError,EOFError,ConnectionResetError,AttributeError) as error:
+
+            self.logger.log('['+user+'@'+hostname+'] `'+str(scripts)+'` '+str(error),3)
+            try:
+                sftp.close()
+                transport.close()
+            except Exception: pass
+            self.client.close()
+            return [(user, hostname, scripts, str(error))]
+
