@@ -4,6 +4,7 @@ import sys
 try:
     import SSHClient
     import Daemon
+    import Host
     from cryptography.hazmat.primitives.serialization import load_pem_private_key
     from cryptography.hazmat.backends import default_backend as crypto_default_backend
     from os import walk as walkdir
@@ -79,10 +80,16 @@ class Engine(Daemon.Daemon):
             self.state['hash_'+hostname+'_'+scriptname] = currenthash
             return True
         return True
-       
+
+    def processHost(self, hostname):
+        
+        host = Host.Host(hostname, self.configuration, self.logger)
+        return host.Process()
+
     def checkHost(self, hostname):
         
         self.genScripts(hostname)
+        self.processHost(hostname)
 
     def genScripts(self, hostname):
         """Generate the scripts for a given host."""
