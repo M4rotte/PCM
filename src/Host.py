@@ -11,7 +11,6 @@ except ImportError as e:
     print('Cannot find the module(s) listed above. Exiting.', file=sys.stderr)
     sys.exit(1)
 
-
 class Host:
 
     def __init__(self, hostname, configuration, logger):
@@ -25,19 +24,25 @@ class Host:
         
         return self.name
 
-    def R(self, ressource):
-        
-        try:
-            rfn = self.configuration['host_dir']+'/'+self.name+'/'+self.configuration['ressource_dir']+'/'+ressource
-            with open(rfn) as f:
-                self.state = exec(f.read())
-                self.logger.log('Ressource “'+ressource+'” processed. ('+rfn+')', 0)
-                return self.state
-        except FileNotFoundError:
-            self.logger.log('Ressource “'+ressource+'” not found.("'+rfn+'" not found)', 1)
-            return 'Unprocessed'
-
     def Process(self):
+        
+        def R(ressource):
+        
+            try:
+                rfn = self.configuration['host_dir']+'/'+self.name+'/'+self.configuration['ressource_dir']+'/'+ressource
+                with open(rfn) as f:
+                    loc = {}
+                    exec(f.read(), {}, loc)
+                    self.logger.log('Ressource “'+ressource+'” processed. ('+rfn+')', 0)
+                    return loc['state']
+                    
+            except FileNotFoundError:
+                self.logger.log('Ressource “'+ressource+'” not found.("'+rfn+'" not found)', 1)
+                return 'NotFound'
+            
+            except Exception as err:
+                self.logger.log('Ressource “'+ressource+'” is invalid. ('+str(err)+')', 2)
+                return 'Invalid'
         
         try:
             with open(self.entrypoint,'r') as f:
@@ -48,7 +53,7 @@ class Host:
         except FileNotFoundError:
             self.logger.log('Host “'+self.name+'” has no entry point. ("'+self.entrypoint+'" not found)', 1)
             return 'Unprocessed'
-        except SyntaxError:
-            self.logger.log('`'+self.entrypoint+'` has syntax error(s)!', 2)
+        except Exception:
+            self.logger.log('`'+self.entrypoint+'` is invalid!', 2)
             return 'Unprocessed'
 

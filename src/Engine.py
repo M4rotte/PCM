@@ -120,7 +120,7 @@ class Engine(Daemon.Daemon):
         # ~ print(self.execOnHosts('ls'))
         for host in self.getHosts():
             self.checkHost(host)
-            print(self.execHostScripts(host))
+            # ~ print(self.execHostScripts(host))
         self.report()
         sleep(10)
 
