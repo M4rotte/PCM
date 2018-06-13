@@ -5,6 +5,7 @@ try:
 
     from os import walk as walkdir
     from os import path
+    from random import randint
 
 except ImportError as e:
     print(str(e), file=sys.stderr)
@@ -32,7 +33,11 @@ class Host:
                 rfn = self.configuration['host_dir']+'/'+self.name+'/'+self.configuration['ressource_dir']+'/'+ressource
                 with open(rfn) as f:
                     loc = {}
-                    exec(f.read(), {}, loc)
+                    available_builtins  = {'locals': locals,
+                                           'globals': globals,
+                                           'print': print,
+                                           'randint': randint}
+                    exec(f.read(), {'__builtins__': available_builtins}, loc)
                     self.logger.log('Ressource “'+ressource+'” processed. ('+rfn+')', 0)
                     return loc['state']
                     
