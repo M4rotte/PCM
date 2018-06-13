@@ -27,17 +27,19 @@ class Host:
 
     def Process(self):
         
+        self.available_builtins  = {'locals'       : locals,
+                                    'globals'      : globals,
+                                    'print'        : print,
+                                    'randint'      : randint,
+                                    'str'          : str,
+                                    'self'         : self}
         def R(ressource):
         
             try:
                 rfn = self.configuration['host_dir']+'/'+self.name+'/'+self.configuration['ressource_dir']+'/'+ressource
                 with open(rfn) as f:
                     loc = {}
-                    available_builtins  = {'locals': locals,
-                                           'globals': globals,
-                                           'print': print,
-                                           'randint': randint}
-                    exec(f.read(), {'__builtins__': available_builtins}, loc)
+                    exec(f.read(), {'__builtins__': self.available_builtins}, loc)
                     self.logger.log('Ressource “'+ressource+'” processed. ('+rfn+')', 0)
                     return loc['state']
                     
@@ -51,14 +53,17 @@ class Host:
         
         try:
             with open(self.entrypoint,'r') as f:
-                self.logger.log('Processing '+self.configuration['entry_point'], 0)
-                self.state = exec(f.read())
+                loc = {'state': 'Unknown'}
+                self.logger.log('Processing '+self.configuration['entry_point']+'…', 0)
+                available_functions = self.available_builtins
+                available_functions['R'] = R
+                exec(f.read(), {'__builtins__': available_functions}, loc)
                 self.logger.log(self.configuration['entry_point']+' processed.', 0)
-                return self.state
+                return loc['state']
         except FileNotFoundError:
             self.logger.log('Host “'+self.name+'” has no entry point. ("'+self.entrypoint+'" not found)', 1)
             return 'Unprocessed'
-        except Exception:
-            self.logger.log('`'+self.entrypoint+'` is invalid!', 2)
+        except Exception as e:
+            self.logger.log('`'+self.entrypoint+'` is invalid! ('+str(e)+')', 2)
             return 'Unprocessed'
 
