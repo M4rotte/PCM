@@ -1,4 +1,3 @@
 Generate a script for a host even if the input script did not change but host environment did.
-Secure script execution (https://stackoverflow.com/questions/9672791/how-to-safely-use-exec-in-python)
 
 

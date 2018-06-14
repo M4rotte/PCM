@@ -11,6 +11,7 @@ try:
     from os import path
     from time import time, sleep, strftime
     from hashlib import blake2b
+    from random import randint
     import re
 
 except ImportError as e:
@@ -22,6 +23,13 @@ class Engine(Daemon.Daemon):
     def __init__(self, configuration, logger = None, name = 'Engine'):
         super().__init__(configuration, logger, 'Engine')
         self.re_script = re.compile(r'^.*\.sh$')
+    
+        self.available_builtins  = {'locals'       : locals,
+                                    'globals'      : globals,
+                                    'print'        : print,
+                                    'randint'      : randint,
+                                    'str'          : str,
+                                    'self'         : self}
     
     def createSSHClient(self):
         self.SSHClient = SSHClient.SSHClient(self.readKeyFile(self.configuration['rsa_key']), self.logger, self.configuration)
@@ -107,7 +115,10 @@ class Engine(Daemon.Daemon):
                         infilename = self.configuration['script_dir']+'/'+line
                         output.write('#!/bin/sh\n')
                         output.write('# Script: {} | Host: {} | Time: {}\n\n'.format(line,hostname,strftime("%Y-%m-%d %H:%M:%S %Z")))
-                        exec(open(infilename).read())
+                        loc = {}
+                        available_functions = self.available_builtins
+                        available_functions['R'] = R
+                        exec(open(infilename).read(), {'__builtins__': available_functions}, loc)
         except FileNotFoundError: pass
         except Exception as e: print(str(e))
 
