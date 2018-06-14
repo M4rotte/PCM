@@ -116,9 +116,8 @@ class Engine(Daemon.Daemon):
                         output.write('#!/bin/sh\n')
                         output.write('# Script: {} | Host: {} | Time: {}\n\n'.format(line,hostname,strftime("%Y-%m-%d %H:%M:%S %Z")))
                         loc = {}
-                        available_functions = self.available_builtins
-                        available_functions['R'] = R
-                        exec(open(infilename).read(), {'__builtins__': available_functions}, loc)
+                        exec(open(infilename).read(), {'__builtins__': self.available_builtins}, loc)
+                        output.write(loc['output'])
         except FileNotFoundError: pass
         except Exception as e: print(str(e))
 
@@ -131,7 +130,7 @@ class Engine(Daemon.Daemon):
         # ~ print(self.execOnHosts('ls'))
         for host in self.getHosts():
             self.checkHost(host)
-            # ~ print(self.execHostScripts(host))
+            print(self.execHostScripts(host))
         self.report()
         sleep(10)
 

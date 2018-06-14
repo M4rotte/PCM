@@ -38,7 +38,7 @@ class Host:
             try:
                 rfn = self.configuration['host_dir']+'/'+self.name+'/'+self.configuration['ressource_dir']+'/'+ressource
                 with open(rfn) as f:
-                    loc = {}
+                    loc = {'state': 'Unknown'}
                     exec(f.read(), {'__builtins__': self.available_builtins}, loc)
                     self.logger.log('Ressource “'+ressource+'” processed. ('+rfn+')', 0)
                     return loc['state']
@@ -55,9 +55,7 @@ class Host:
             with open(self.entrypoint,'r') as f:
                 loc = {'state': 'Unknown'}
                 self.logger.log('Processing '+self.configuration['entry_point']+'…', 0)
-                available_functions = self.available_builtins
-                available_functions['R'] = R
-                exec(f.read(), {'__builtins__': available_functions}, loc)
+                exec(f.read(), {'__builtins__': self.available_builtins, 'R': R}, loc)
                 self.logger.log(self.configuration['entry_point']+' processed.', 0)
                 return loc['state']
         except FileNotFoundError:
