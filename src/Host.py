@@ -34,7 +34,7 @@ class Host:
                                     'str'          : str,
                                     'self'         : self}
         def R(ressource):
-        
+            """Call a ressource."""
             try:
                 rfn = self.configuration['host_dir']+'/'+self.name+'/'+self.configuration['ressource_dir']+'/'+ressource
                 with open(rfn) as f:
@@ -50,12 +50,34 @@ class Host:
             except Exception as err:
                 self.logger.log('Ressource “'+ressource+'” is invalid. ('+str(err)+')', 2)
                 return 'Invalid'
+
+        def F(rfile):
+            """Call a file ressource. WIP"""
+            try:
+                rffn = self.configuration['host_dir']+'/'+self.name+'/'+self.configuration['file_dir']+'/'+rfile
+                with open(rffn) as f:
+                    loc = {'state': 'Unknown'}
+                    
+                    exec(f.read(), {'__builtins__': self.available_builtins}, loc)
+                    self.logger.log('File “'+rfile+'” processed. ('+rffn+')', 0)
+                    return loc['state']
+                    
+            except FileNotFoundError:
+                self.logger.log('File “'+rfile+'” not found.("'+rffn+'" not found)', 1)
+                return 'NotFound'
+            
+            except Exception as err:
+                self.logger.log('File “'+rfile+'” is invalid. ('+str(err)+')', 2)
+                return 'Invalid'
         
         try:
             with open(self.entrypoint,'r') as f:
                 loc = {'state': 'Unknown'}
                 self.logger.log('Processing '+self.configuration['entry_point']+'…', 0)
-                exec(f.read(), {'__builtins__': self.available_builtins, 'R': R}, loc)
+                exec(f.read(), {'__builtins__': self.available_builtins,
+                                'R': R,
+                                'F': F},
+                                loc)
                 self.logger.log(self.configuration['entry_point']+' processed.', 0)
                 return loc['state']
         except FileNotFoundError:

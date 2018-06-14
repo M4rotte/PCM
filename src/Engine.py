@@ -22,6 +22,7 @@ except ImportError as e:
 class Engine(Daemon.Daemon):
     def __init__(self, configuration, logger = None, name = 'Engine'):
         super().__init__(configuration, logger, 'Engine')
+        self.configuration = configuration
         self.re_script = re.compile(r'^.*\.sh$')
     
         self.available_builtins  = {'locals'       : locals,

@@ -1,3 +1,4 @@
+Factorize for R(), F()
 Generate a script for a host even if the input script did not change but host environment did.
-
+FIXME: Engine objet confused with Engine object if state files already exists before starting (state files mismatch ??)
 
