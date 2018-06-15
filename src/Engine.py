@@ -21,8 +21,9 @@ except ImportError as e:
 
 class Engine(Daemon.Daemon):
     def __init__(self, configuration, logger = None, name = 'Engine'):
+
         super().__init__(configuration, logger, 'Engine')
-        self.configuration = configuration
+        
         self.re_script = re.compile(r'^.*\.sh$')
     
         self.available_builtins  = {'locals'       : locals,
@@ -117,7 +118,8 @@ class Engine(Daemon.Daemon):
                         output.write('#!/bin/sh\n')
                         output.write('# Script: {} | Host: {} | Time: {}\n\n'.format(line,hostname,strftime("%Y-%m-%d %H:%M:%S %Z")))
                         loc = {}
-                        exec(open(infilename).read(), {'__builtins__': self.available_builtins}, loc)
+                        exec(open(infilename).read(), {'__builtins__': self.available_builtins,
+                                                       'hostname'    : hostname}, loc)
                         output.write(loc['output'])
         except FileNotFoundError: pass
         except Exception as e: print(str(e))
